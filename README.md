@@ -1,2 +1,21 @@
-# subscription-tracker
+# Subscription Tracker
+
 A free, open-source app to track recurring subscriptions and personal expenses.
+
+---
+
+## Features (MVP)
+
+- Track subscriptions: merchant, price, interval, next renewal, payment method
+- Get notified before renewals (7 / 3 / 1 days + on the day of renewal)
+- Add/edit merchants manually
+- Analytics: total amount spend + breakdown per merchant
+
+## Tech Stack
+
+- Backend: Java 21, Spring Boot 3, JPA, Flyway, JWT Auth
+- Database: PostgreSQL 16 (via Docker Compose)
+- Notifications: Firebase Cloud Messaging
+- Docs: OpenAPI 3, Swagger UI
+
+---
