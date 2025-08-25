@@ -19,3 +19,8 @@ A free, open-source app to track recurring subscriptions and personal expenses.
 - Docs: OpenAPI 3, Swagger UI
 
 ---
+## Setup
+
+1. Copy `.env.example` to `.env`
+2. Update `.env` with your actual credentials
+3. Never commit `.env` to version control
