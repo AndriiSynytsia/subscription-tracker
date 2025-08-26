@@ -1,0 +1,9 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: analytics-service
+  datasource:
+    url: jdbc:mysql://localhost:5433/subscription-tracker
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}

@@ -1,0 +1,9 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: expense-service
+  datasource:
+    url: jdbc:mysql://localhost:5433/subscription-tracker
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}

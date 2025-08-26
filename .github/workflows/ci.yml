@@ -1,0 +1,40 @@
+name: CI/CD Pipeline
+on:
+  - push
+  - pull_request
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.changes.outputs.auth }}
+      subscription: ${{ steps.changes.outputs.subscription }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            auth:
+              - 'services/auth-service/**'
+            subscription:
+              - 'services/subscription-service/**'
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+      - run: ./mvnw clean test
+
+  build-auth:
+    needs: [detect-changes, test]
+    if: needs.detect-changes.outputs.auth == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          cd services/auth-service
+          docker build -t auth-service .
