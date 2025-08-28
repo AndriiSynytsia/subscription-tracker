@@ -4,6 +4,6 @@ spring:
   application:
     name: notification-service
   datasource:
-    url: jdbc:mysql://localhost:5433/subscription-tracker
+    url: jdbc:postgresql://localhost:5433/subscription-tracker
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
