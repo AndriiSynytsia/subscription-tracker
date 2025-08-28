@@ -6,6 +6,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class ApiGatewayServiceApplicationTest {
     @Test
+    /*
+     * This is an empty test method that verifies if the Spring application context loads successfully.
+     */
     void contextLoads() {
     }
 }

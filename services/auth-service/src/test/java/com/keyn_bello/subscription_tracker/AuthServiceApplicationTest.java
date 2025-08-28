@@ -7,6 +7,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 class AuthServiceApplicationTest {
 
     @Test
+    /*
+     * This is an empty test method that verifies if the Spring application context loads successfully.
+     */
     void contextLoads() {
     }
 }
