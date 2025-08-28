@@ -46,7 +46,7 @@ jobs:
       - name: Make mvnw executable
         run: chmod +x ./mvnw
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
@@ -65,6 +65,8 @@ jobs:
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: testdb
+        ports:
+          - 5433:5432
         options:
           --health-cmd pg_isready
           --health-interval 10s
@@ -86,10 +88,12 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - run: ./mvnw clean test -Dspring.profiles.active=test
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
 
   build-auth:
     needs: [detect-changes, test]
