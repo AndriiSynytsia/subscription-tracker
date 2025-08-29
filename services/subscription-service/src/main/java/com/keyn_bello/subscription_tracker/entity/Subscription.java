@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -17,12 +18,12 @@ import java.time.LocalDate;
 @Getter
 public class Subscription {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotBlank
     private String merchantName;
     @Positive
-    private double price;
+    private BigDecimal price;
     @FutureOrPresent
     private LocalDate nextRenewalDate;
     // notificationInterval could be replaced later with Notification Service instance
