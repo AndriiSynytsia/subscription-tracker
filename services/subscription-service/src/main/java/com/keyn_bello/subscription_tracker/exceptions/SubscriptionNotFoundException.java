@@ -1,6 +1,6 @@
 package com.keyn_bello.subscription_tracker.exceptions;
 
-public class SubscriptionNotFoundException extends RuntimeException{
+public class SubscriptionNotFoundException extends RuntimeException {
 
     public SubscriptionNotFoundException(String message) {
         super(message);

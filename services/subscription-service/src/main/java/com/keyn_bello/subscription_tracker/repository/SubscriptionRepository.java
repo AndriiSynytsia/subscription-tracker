@@ -14,4 +14,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findByNextRenewalDateBefore(LocalDate cutOffDate);
 
     List<Subscription> findByUserIdAndMerchantName(@NotNull Long userId, @NotBlank String merchantName);
+
+    boolean existsByUserIdAndMerchantName(@NotNull Long userId, @NotBlank String merchantName);
 }

@@ -31,8 +31,7 @@ public class SubscriptionService {
             throw new IllegalArgumentException("Subscription cannot be null");
         }
 
-        List<Subscription> existingSubscriptions = subscriptionRepository.findByUserIdAndMerchantName(subscription.getUserId(), subscription.getMerchantName());
-        if (!existingSubscriptions.isEmpty()) {
+        if (subscriptionRepository.existsByUserIdAndMerchantName(subscription.getUserId(), subscription.getMerchantName())) {
             throw new DuplicateSubscriptionException("Subscription already exists for merchant: " + subscription.getMerchantName());
         }
         return subscriptionRepository.save(subscription);
