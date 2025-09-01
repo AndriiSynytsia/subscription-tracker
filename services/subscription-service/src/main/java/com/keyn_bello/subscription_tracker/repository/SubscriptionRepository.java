@@ -9,9 +9,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
-    List<Subscription> findByUserId(Long userId);
+    List<Subscription> findByUserId(@NotNull Long userId);
 
-    List<Subscription> findByNextRenewalDateBefore(LocalDate cutOffDate);
+    List<Subscription> findByNextRenewalDateBefore(@NotNull LocalDate cutOffDate);
 
     List<Subscription> findByUserIdAndMerchantName(@NotNull Long userId, @NotBlank String merchantName);
 

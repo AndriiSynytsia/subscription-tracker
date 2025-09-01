@@ -27,6 +27,7 @@ public class Subscription {
     @FutureOrPresent
     private LocalDate nextRenewalDate;
     // notificationInterval could be replaced later with Notification Service instance
+    @Positive
     private int notificationInterval;
     @NotNull
     private Long userId;
