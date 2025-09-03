@@ -1,15 +1,19 @@
 package com.keyn_bello.subscription_tracker.dto;
 
+import com.keyn_bello.subscription_tracker.entity.BillingCycle;
+import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
 import jakarta.validation.constraints.*;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record SubscriptionCreateRequestDto(
-        @NotNull @NotBlank String merchantName,
-        @NotNull @Positive BigDecimal price,
-        @NotNull @Future @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate nextRenewalDate,
-        @PositiveOrZero Integer notificationInterval,
-        @NotNull Long userId
-) {}
+        @NotNull Long userId,
+        @NotBlank @Size(max = 80) String merchantName,
+        @NotNull @Positive @Digits(integer = 8, fraction = 2) BigDecimal price,
+        @NotNull BillingCycle billingCycle,
+        @NotNull @Future LocalDate nextRenewalDate,
+        @PositiveOrZero @Max(365) Integer notificationInterval,
+        @NotNull PaymentMethod paymentMethod
+) {
+}

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "subscriptions")
@@ -20,15 +21,50 @@ public class Subscription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotNull
+    @Column(name = "user_id")
+    private Long userId;
+
     @NotBlank
+    @Column(name = "merchant_name")
     private String merchantName;
+
     @Positive
     private BigDecimal price;
+
+    @Builder.Default
+    private String currency = "USD";
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_cycle")
+    private BillingCycle billingCycle;
+
     @FutureOrPresent
+    @Column(name = "next_renewal_date")
     private LocalDate nextRenewalDate;
+
     // notificationInterval could be replaced later with Notification Service instance
     @Positive
+    @Column(name = "notification_interval")
     private int notificationInterval;
+
     @NotNull
-    private Long userId;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private SubscriptionStatus status = SubscriptionStatus.ACTIVE;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private PaymentMethod paymentMethod;
+
+    @NotNull
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @NotNull
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
