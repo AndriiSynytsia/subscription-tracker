@@ -4,6 +4,9 @@ import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
 import com.keyn_bello.subscription_tracker.service.SubscriptionService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,11 +36,13 @@ public class SubscriptionController {
     @PostMapping
     public ResponseEntity<Subscription> createSubscription(@Valid @RequestBody SubscriptionCreateRequestDto subscriptionDto) {
         Subscription subscription = Subscription.builder()
+                .userId(subscriptionDto.userId())
                 .merchantName(subscriptionDto.merchantName())
                 .price(subscriptionDto.price())
+                .billingCycle(subscriptionDto.billingCycle())
                 .nextRenewalDate(subscriptionDto.nextRenewalDate())
                 .notificationInterval(subscriptionDto.notificationInterval())
-                .userId(subscriptionDto.userId())
+                .paymentMethod(subscriptionDto.paymentMethod())
                 .build();
 
         Subscription createdSubscription = subscriptionService.createSubscription(subscription);
@@ -76,11 +81,13 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the updated Subscription object and HTTP status code
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Subscription> updateSubscription(@PathVariable Long id, @RequestBody Subscription subscription) {
+    public ResponseEntity<Subscription> updateSubscription(@Valid @PathVariable Long id, @RequestBody Subscription subscription) {
         subscription = Subscription.builder()
                 .id(id)
                 .merchantName(subscription.getMerchantName())
                 .price(subscription.getPrice())
+                .billingCycle(subscription.getBillingCycle())
+                .paymentMethod(subscription.getPaymentMethod())
                 .nextRenewalDate(subscription.getNextRenewalDate())
                 .notificationInterval(subscription.getNotificationInterval())
                 .userId(subscription.getUserId())
@@ -111,7 +118,7 @@ public class SubscriptionController {
      * @return - ResponseEntity containing a list of Subscription objects and HTTP status code
      */
     @GetMapping("/renewals")
-    public ResponseEntity<List<Subscription>> getUpcomingRenewals(@RequestParam int daysAhead) {
+    public ResponseEntity<List<Subscription>> getUpcomingRenewals(@RequestParam @Min(1) @Max(365) int daysAhead) {
         List<Subscription> upcomingRenewals = subscriptionService.getUpcomingRenewals(daysAhead);
         return ResponseEntity.ok(upcomingRenewals);
     }

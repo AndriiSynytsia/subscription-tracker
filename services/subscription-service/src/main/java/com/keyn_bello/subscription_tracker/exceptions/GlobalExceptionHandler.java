@@ -4,12 +4,16 @@ import com.keyn_bello.subscription_tracker.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static ErrorResponse getErrorResponse(Exception exception, HttpServletRequest request, HttpStatus httpStatus) {
@@ -19,6 +23,36 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 request.getRequestURI()
         );
+    }
+
+    /**
+     * Validation handler for MethodArgumentNotValidException
+     *
+     * @param exception - exception thrown when validation fails
+     * @return - HTTP response with error details
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException exception) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "Validation failed");
+        body.put("errors", exception.getBindingResult().getFieldErrors().stream()
+                .map(fe -> {
+                    assert fe.getDefaultMessage() != null;
+                    return Map.of("field", fe.getField(), "message", fe.getDefaultMessage());
+                }).toList());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<?> handleBind(BindException exception) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "Invalid request");
+        body.put("errors", exception.getBindingResult().getFieldErrors().stream()
+                .map(fe -> {
+                    assert fe.getDefaultMessage() != null;
+                    return Map.of("field", fe.getField(), "message", fe.getDefaultMessage());
+                }).toList());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     /**
