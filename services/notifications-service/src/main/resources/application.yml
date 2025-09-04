@@ -1,6 +1,11 @@
 server:
   port: 8085
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
   application:
     name: notification-service
   datasource:

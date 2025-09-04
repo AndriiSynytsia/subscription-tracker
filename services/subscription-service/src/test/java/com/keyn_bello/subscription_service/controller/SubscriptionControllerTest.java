@@ -1,4 +1,4 @@
-package com.keyn_bello.subscription_tracker.controller;
+package com.keyn_bello.subscription_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
@@ -138,18 +138,8 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName("return 404 when subscription not found")
         void shouldReturn404_whenDeleteSubscriptionNotFound() throws Exception {
-            //given
-            Subscription subscription = Subscription.builder()
-                    .id(1L)
-                    .userId(1L)
-                    .merchantName("Test")
-                    .price(new BigDecimal("10.0"))
-                    .build();
-
-            //when
             when(subscriptionService.getSubscriptionById(1L)).thenThrow(new SubscriptionNotFoundException("Subscription not found"));
 
-            //then
             mockMvc.perform(delete("/api/subscriptions/1")
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
@@ -205,18 +195,8 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName("return 400 when invalid input")
         void shouldReturn400_whenInvalidDaysAhead() throws Exception {
-            //given
-            Subscription subscription = Subscription.builder()
-                    .id(1L)
-                    .userId(1L)
-                    .merchantName("Test")
-                    .price(new BigDecimal("10.0"))
-                    .build();
-
-            //when
             when(subscriptionService.getUpcomingRenewals(7)).thenThrow(new IllegalArgumentException("Invalid input"));
 
-            //then
             mockMvc.perform(get("/api/subscriptions/renewals?daysAhead=7")
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isBadRequest());
@@ -257,18 +237,8 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName(("return 404 when subscription not found"))
         void shouldReturn404_whenSubscriptionNotFound() throws Exception {
-            //given
-            Subscription subscription = Subscription.builder()
-                    .id(1L)
-                    .userId(1L)
-                    .merchantName("Test")
-                    .price(new BigDecimal("10.0"))
-                    .build();
-
-            //when
             when(subscriptionService.getSubscriptionById(1L)).thenThrow(new SubscriptionNotFoundException("Subscription not found"));
 
-            //then
             mockMvc.perform(get("/api/subscriptions/1")
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());

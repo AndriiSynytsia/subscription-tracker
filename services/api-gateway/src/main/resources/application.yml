@@ -1,6 +1,11 @@
 server:
   port: 8083
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
   application:
     name: api-gateway-service
   datasource:

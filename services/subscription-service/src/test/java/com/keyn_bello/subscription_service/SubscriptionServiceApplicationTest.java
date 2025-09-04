@@ -1,4 +1,4 @@
-package com.keyn_bello.subscription_tracker;
+package com.keyn_bello.subscription_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

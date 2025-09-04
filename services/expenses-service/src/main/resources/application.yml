@@ -1,6 +1,11 @@
 server:
   port: 8084
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
   application:
     name: expense-service
   datasource:

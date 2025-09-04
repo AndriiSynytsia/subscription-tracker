@@ -1,4 +1,4 @@
-package com.keyn_bello.subscription_tracker.api;
+package com.keyn_bello.subscription_service.api;
 
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
@@ -241,7 +241,7 @@ public class SubscriptionApiIT {
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(resp.getBody()).isNotNull();
-            assertThat(resp.getBody().length).isGreaterThanOrEqualTo(0);
+            assertThat(resp.getBody()).hasSizeGreaterThanOrEqualTo(0);
         }
 
         @Test

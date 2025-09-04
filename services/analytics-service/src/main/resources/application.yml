@@ -1,6 +1,11 @@
 server:
   port: 8082
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
   application:
     name: analytics-service
   datasource:

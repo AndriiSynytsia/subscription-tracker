@@ -23,8 +23,8 @@
     <modules>
         <module>services/auth-service</module>
         <module>services/subscription-service</module>
-        <module>services/notification-service</module>
-        <module>services/expense-service</module>
+        <module>services/notifications-service</module>
+        <module>services/expenses-service</module>
         <module>services/analytics-service</module>
         <module>services/api-gateway</module>
         <module>shared/common-lib</module>

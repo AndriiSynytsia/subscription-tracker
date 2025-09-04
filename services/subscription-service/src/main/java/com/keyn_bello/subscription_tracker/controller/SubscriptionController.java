@@ -76,7 +76,7 @@ public class SubscriptionController {
     /**
      * REST endpoint to update a subscription
      *
-     * @param id           - id of the subscription to be updated
+     * @param id        - id of the subscription to be updated
      * @param updateDto - updated Subscription object
      * @return - ResponseEntity containing the updated Subscription object and HTTP status code
      */

@@ -16,6 +16,9 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    public static final String MESSAGE_KEY = "message";
+    public static final String FIELD_KEY = "field";
+
     private static ErrorResponse getErrorResponse(Exception exception, HttpServletRequest request, HttpStatus httpStatus) {
         return new ErrorResponse(
                 exception.getMessage(),
@@ -32,25 +35,25 @@ public class GlobalExceptionHandler {
      * @return - HTTP response with error details
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException exception) {
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception) {
         Map<String, Object> body = new HashMap<>();
-        body.put("message", "Validation failed");
+        body.put(MESSAGE_KEY, "Validation failed");
         body.put("errors", exception.getBindingResult().getFieldErrors().stream()
                 .map(fe -> {
                     assert fe.getDefaultMessage() != null;
-                    return Map.of("field", fe.getField(), "message", fe.getDefaultMessage());
+                    return Map.of(FIELD_KEY, fe.getField(), MESSAGE_KEY, fe.getDefaultMessage());
                 }).toList());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(BindException.class)
-    public ResponseEntity<?> handleBind(BindException exception) {
+    public ResponseEntity<Map<String, Object>> handleBind(BindException exception) {
         Map<String, Object> body = new HashMap<>();
-        body.put("message", "Invalid request");
+        body.put(MESSAGE_KEY, "Invalid request");
         body.put("errors", exception.getBindingResult().getFieldErrors().stream()
                 .map(fe -> {
                     assert fe.getDefaultMessage() != null;
-                    return Map.of("field", fe.getField(), "message", fe.getDefaultMessage());
+                    return Map.of(FIELD_KEY, fe.getField(), MESSAGE_KEY, fe.getDefaultMessage());
                 }).toList());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
