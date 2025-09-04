@@ -77,7 +77,24 @@ public class SubscriptionService {
             throw new SubscriptionNotFoundException(subscription.getId());
         }
 
-        return subscriptionRepository.save(subscription);
+        Subscription existing = subscriptionRepository.findById(subscription.getId())
+                .orElseThrow(() -> new SubscriptionNotFoundException(subscription.getId()));
+
+        Subscription updatedSubscription = Subscription.builder()
+                .id(existing.getId())
+                .userId(existing.getUserId())
+                .merchantName(subscription.getMerchantName())
+                .price(subscription.getPrice())
+                .currency(subscription.getCurrency())
+                .billingCycle(subscription.getBillingCycle())
+                .nextRenewalDate(subscription.getNextRenewalDate())
+                .notificationInterval(subscription.getNotificationInterval())
+                .status(subscription.getStatus() != null ? subscription.getStatus() : existing.getStatus())
+                .paymentMethod(subscription.getPaymentMethod())
+                .createdAt(existing.getCreatedAt())
+                .build();
+
+        return subscriptionRepository.save(updatedSubscription);
     }
 
     /**

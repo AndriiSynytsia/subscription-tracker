@@ -1,12 +1,12 @@
 package com.keyn_bello.subscription_tracker.controller;
 
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
+import com.keyn_bello.subscription_tracker.dto.SubscriptionUpdateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
 import com.keyn_bello.subscription_tracker.service.SubscriptionService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -77,20 +77,20 @@ public class SubscriptionController {
      * REST endpoint to update a subscription
      *
      * @param id           - id of the subscription to be updated
-     * @param subscription - updated Subscription object
+     * @param updateDto - updated Subscription object
      * @return - ResponseEntity containing the updated Subscription object and HTTP status code
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Subscription> updateSubscription(@Valid @PathVariable Long id, @RequestBody Subscription subscription) {
-        subscription = Subscription.builder()
+    public ResponseEntity<Subscription> updateSubscription(@Valid @PathVariable Long id, @RequestBody SubscriptionUpdateRequestDto updateDto) {
+        Subscription subscription = Subscription.builder()
                 .id(id)
-                .merchantName(subscription.getMerchantName())
-                .price(subscription.getPrice())
-                .billingCycle(subscription.getBillingCycle())
-                .paymentMethod(subscription.getPaymentMethod())
-                .nextRenewalDate(subscription.getNextRenewalDate())
-                .notificationInterval(subscription.getNotificationInterval())
-                .userId(subscription.getUserId())
+                .merchantName(updateDto.merchantName())
+                .price(updateDto.price())
+                .billingCycle(updateDto.billingCycle())
+                .paymentMethod(updateDto.paymentMethod())
+                .nextRenewalDate(updateDto.nextRenewalDate())
+                .notificationInterval(updateDto.notificationInterval())
+                .status(updateDto.status())
                 .build();
         Subscription updatedSubscription = subscriptionService.updateSubscription(subscription);
         return ResponseEntity.ok(updatedSubscription);
