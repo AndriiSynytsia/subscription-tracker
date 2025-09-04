@@ -1,4 +1,4 @@
-package com.keyn_bello.subscription_service.service;
+package com.keyn_bello.subscription_tracker.service;
 
 import org.junit.jupiter.api.Test;
 

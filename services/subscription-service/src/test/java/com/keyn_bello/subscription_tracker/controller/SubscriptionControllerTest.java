@@ -1,6 +1,7 @@
-package com.keyn_bello.subscription_service.controller;
+package com.keyn_bello.subscription_tracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.keyn_bello.subscription_tracker.SubscriptionServiceApplication;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
