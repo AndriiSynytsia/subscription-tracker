@@ -3,38 +3,83 @@ on:
   - push
   - pull_request
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
       auth: ${{ steps.changes.outputs.auth }}
-      subscription: ${{ steps.changes.outputs.subscription }}
+      any: ${{ steps.changes.outputs.any }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v2
-        id: changes
+      - id: changes
+        uses: dorny/paths-filter@v2
         with:
           filters: |
-            auth:
-              - 'services/auth-service/**'
-            subscription:
-              - 'services/subscription-service/**'
+            app:
+              - 'pom.xml'
+              - 'src/**'
+            any:
+              - 'pom.xml'
+              - 'src/**'
+              - 'docs/**'
+              - '.github/workflows/**'
 
   test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
+      - name: Pre-pull Testcontainers
+        run: |
+          docker pull postgres:16
+
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
+
       - name: Make mvnw executable
         run: chmod +x ./mvnw
-      # Skip tests until database configuration is ready
-      - run: ./mvnw clean compile test -DskipTests
+
+      - name: Build & Test (unit + integration with Testcontainers)
+        run: ./mvnw -B -DskipTests=false clean verify
+
+      - name: Upload JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-failsafe-reports
+          path: |
+            **/target/surefire-reports/*
+            **/target/failsafe-reports/*
+          if-no-files-found: ignore
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco
+          path: |
+            **/target/site/jacoco/jacoco.xml
+          if-no-files-found: ignore
 
   sonar:
+    needs: test
     runs-on: ubuntu-latest
+    if: (github.event_name == 'push' || github.event_name == 'pull_request') && needs.detect-changes.outputs.app == 'true'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,68 +88,23 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
+
       - name: Make mvnw executable
         run: chmod +x ./mvnw
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
-      - name: SonarCloud Scan
+      - name: SonarCloud Scan (with coverage)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        # Skip tests until database configuration is ready
-        run: ./mvnw clean verify sonar:sonar -DskipTests -Dsonar.projectKey=AndriiSynytsia_subscription-tracker
-
-  test-with-services:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: testdb
-        ports:
-          - 5433:5432
-        options:
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      rabbitmq:
-        image: rabbitmq:3-management
-        env:
-          RABBITMQ_DEFAULT_USER: test
-          RABBITMQ_DEFAULT_PASS: test
-        options:
-          --health-cmd rabbitmq-diagnostics -q ping
-          --health-interval 30s
-          --health-timeout 30s
-          --health-retries 3
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-      - name: Make mvnw executable
-        run: chmod +x ./mvnw
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: testdb
-
-  build-auth:
-    needs: [detect-changes, test]
-    if: needs.detect-changes.outputs.auth == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-      - run: |
-          cd services/auth-service
-          docker build -t auth-service .
+        run: |
+          ./mvnw -B verify sonar:sonar \
+          -DskipTests=false \
+          -Dsonar.projectKey=AndriiSynytsia_subscription-tracker \
+          -Dsonar.junit.reportPaths=**/taget/surefire-reports \
+          -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml
