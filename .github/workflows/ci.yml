@@ -110,5 +110,6 @@ jobs:
           ./mvnw -B verify sonar:sonar \
           -DskipTests=false \
           -Dsonar.projectKey=AndriiSynytsia_subscription-tracker \
+          -Dsonar.organizationKey=subscripiton-trackes-sc \
           -Dsonar.junit.reportPaths=**/target/surefire-reports \
           -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml
