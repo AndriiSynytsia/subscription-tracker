@@ -1,7 +1,6 @@
 package com.keyn_bello.subscription_tracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.keyn_bello.subscription_tracker.SubscriptionServiceApplication;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -60,10 +58,22 @@ class SubscriptionControllerTest {
                     .userId(1L)
                     .merchantName("Youtube")
                     .price(new BigDecimal("11.99"))
+                    .billingCycle(BillingCycle.MONTHLY)
+                    .paymentMethod(PaymentMethod.CREDIT_CARD)
+                    .notificationInterval(7)
+                    .nextRenewalDate(LocalDate.now().plusDays(30))
                     .build();
 
             Subscription updated = Subscription.builder()
-                    .id(7L).userId(1L).merchantName("Youtube").price(new BigDecimal("11.99")).build();
+                    .id(7L)
+                    .userId(1L)
+                    .merchantName("Youtube")
+                    .price(new BigDecimal("11.99"))
+                    .billingCycle(BillingCycle.MONTHLY)
+                    .paymentMethod(PaymentMethod.CREDIT_CARD)
+                    .notificationInterval(7)
+                    .nextRenewalDate(LocalDate.now().plusDays(30))
+                    .build();
 
             //when
             when(subscriptionService.updateSubscription(any())).thenReturn(updated);
@@ -93,6 +103,10 @@ class SubscriptionControllerTest {
                     .userId(1L)
                     .merchantName("Test")
                     .price(new BigDecimal("10.0"))
+                    .billingCycle(BillingCycle.MONTHLY)
+                    .paymentMethod(PaymentMethod.CREDIT_CARD)
+                    .notificationInterval(7)
+                    .nextRenewalDate(LocalDate.now().plusDays(30))
                     .build();
 
             //when
