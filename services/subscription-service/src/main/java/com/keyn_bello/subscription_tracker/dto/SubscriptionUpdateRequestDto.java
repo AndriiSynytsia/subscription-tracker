@@ -9,12 +9,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record SubscriptionUpdateRequestDto(
+        @NotNull Long userId,
         @NotBlank @Size(max = 80) String merchantName,
         @NotNull @Positive @Digits(integer = 8, fraction = 2) BigDecimal price,
         @NotNull BillingCycle billingCycle,
         @NotNull @FutureOrPresent LocalDate nextRenewalDate,
         @PositiveOrZero @Max(365) Integer notificationInterval,
         @NotNull PaymentMethod paymentMethod,
-        SubscriptionStatus status
+        SubscriptionStatus status,
+        @NotBlank @Pattern(regexp = "^[A-Z]{3}$") String currency
 ) {
 }

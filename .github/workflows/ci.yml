@@ -16,20 +16,24 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      auth: ${{ steps.changes.outputs.auth }}
+      app: ${{ steps.changes.outputs.app }}
       any: ${{ steps.changes.outputs.any }}
     steps:
       - uses: actions/checkout@v4
       - id: changes
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         with:
           filters: |
             app:
               - 'pom.xml'
-              - 'src/**'
+              - 'services/*/src/**'
+              - 'services/*/pom.xml'
+              - 'shared/*/src/**'
+              - 'shared/*/pom.xml'
             any:
               - 'pom.xml'
-              - 'src/**'
+              - 'services/**'
+              - 'shared/**'
               - 'docs/**'
               - '.github/workflows/**'
 
@@ -77,7 +81,7 @@ jobs:
           if-no-files-found: ignore
 
   sonar:
-    needs: test
+    needs: [ detect-changes, test ]
     runs-on: ubuntu-latest
     if: (github.event_name == 'push' || github.event_name == 'pull_request') && needs.detect-changes.outputs.app == 'true'
     steps:
@@ -106,5 +110,5 @@ jobs:
           ./mvnw -B verify sonar:sonar \
           -DskipTests=false \
           -Dsonar.projectKey=AndriiSynytsia_subscription-tracker \
-          -Dsonar.junit.reportPaths=**/taget/surefire-reports \
+          -Dsonar.junit.reportPaths=**/target/surefire-reports \
           -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml

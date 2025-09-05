@@ -4,6 +4,8 @@ import com.keyn_bello.subscription_tracker.dto.SubscriptionResponseDto;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class SubscriptionMapper {
     public SubscriptionResponseDto toDto(Subscription subscription) {

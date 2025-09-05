@@ -195,7 +195,7 @@ public class SubscriptionApiIT {
             ResponseEntity<String> resp =
                     rest.exchange(URI.create("/api/subscriptions/9999"), HttpMethod.PUT, req, String.class);
 
-            assertThat(resp.getStatusCode()).isIn(HttpStatus.NOT_FOUND, HttpStatus.OK);
+            assertThat(resp.getStatusCode()).isIn(HttpStatus.NOT_FOUND);
         }
     }
 

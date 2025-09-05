@@ -4,6 +4,8 @@ import com.keyn_bello.subscription_tracker.entity.Subscription;
 import com.keyn_bello.subscription_tracker.exceptions.DuplicateSubscriptionException;
 import com.keyn_bello.subscription_tracker.exceptions.SubscriptionNotFoundException;
 import com.keyn_bello.subscription_tracker.repository.SubscriptionRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,15 +28,22 @@ public class SubscriptionService {
      * @param subscription - Subscription object to be saved
      * @return - saved Subscription object
      */
+    @Transactional
     public Subscription createSubscription(Subscription subscription) {
         if (subscription == null) {
             throw new IllegalArgumentException("Subscription cannot be null");
         }
 
         if (subscriptionRepository.existsByUserIdAndMerchantName(subscription.getUserId(), subscription.getMerchantName())) {
-            throw new DuplicateSubscriptionException("Subscription already exists for merchant: " + subscription.getMerchantName());
+            throw new DuplicateSubscriptionException(
+                    "Subscription already exists for userId=%s and merchant=%s".formatted(subscription.getUserId(), subscription.getMerchantName()));
         }
-        return subscriptionRepository.save(subscription);
+        try {
+            return subscriptionRepository.save(subscription);
+        } catch (DataIntegrityViolationException exception) {
+            throw new DuplicateSubscriptionException(
+                    "Subscription already exists for userId=%s and merchant=%s".formatted(subscription.getUserId(), subscription.getMerchantName()));
+        }
     }
 
     /**
@@ -68,9 +77,14 @@ public class SubscriptionService {
      * @param subscription - Subscription object to be updated
      * @return - updated Subscription object
      */
+    @Transactional
     public Subscription updateSubscription(Subscription subscription) {
         if (subscription == null) {
             throw new IllegalArgumentException("Subscription cannot be null");
+        }
+
+        if (subscription.getId() == null) {
+            throw new IllegalArgumentException("Subscription id cannot be null");
         }
 
         if (!subscriptionRepository.existsById(subscription.getId())) {
@@ -83,17 +97,22 @@ public class SubscriptionService {
         Subscription updatedSubscription = Subscription.builder()
                 .id(existing.getId())
                 .userId(existing.getUserId())
-                .merchantName(subscription.getMerchantName())
-                .price(subscription.getPrice())
-                .currency(subscription.getCurrency())
-                .billingCycle(subscription.getBillingCycle())
-                .nextRenewalDate(subscription.getNextRenewalDate())
-                .notificationInterval(subscription.getNotificationInterval())
+                .merchantName(subscription.getMerchantName() != null ? subscription.getMerchantName() : existing.getMerchantName())
+                .price(subscription.getPrice() != null ? subscription.getPrice() : existing.getPrice())
+                .currency(subscription.getCurrency() != null ? subscription.getCurrency() : existing.getCurrency())
+                .billingCycle(subscription.getBillingCycle() != null ? subscription.getBillingCycle() : existing.getBillingCycle())
+                .nextRenewalDate(subscription.getNextRenewalDate() != null ? subscription.getNextRenewalDate() : existing.getNextRenewalDate())
+                .notificationInterval(subscription.getNotificationInterval() > 0 ? subscription.getNotificationInterval() : existing.getNotificationInterval())
                 .status(subscription.getStatus() != null ? subscription.getStatus() : existing.getStatus())
-                .paymentMethod(subscription.getPaymentMethod())
+                .paymentMethod(subscription.getPaymentMethod() != null ? subscription.getPaymentMethod() : existing.getPaymentMethod())
                 .createdAt(existing.getCreatedAt())
                 .build();
 
+        if (!existing.getMerchantName().equalsIgnoreCase(updatedSubscription.getMerchantName())
+                && subscriptionRepository.existsByUserIdAndMerchantName(existing.getUserId(), updatedSubscription.getMerchantName())) {
+            throw new DuplicateSubscriptionException(
+                    "Subscription already exists for userId=%s and merchant=%s".formatted(existing.getUserId(), updatedSubscription.getMerchantName()));
+        }
         return subscriptionRepository.save(updatedSubscription);
     }
 
@@ -102,9 +121,13 @@ public class SubscriptionService {
      *
      * @param id - id of the subscription to be deleted
      */
+    @Transactional
     public void deleteSubscription(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Subscription id cannot be null");
+        }
         if (!subscriptionRepository.existsById(id)) {
-            throw new SubscriptionNotFoundException("Subscription not found");
+            throw new SubscriptionNotFoundException("Subscription with id " + id + " not found");
         }
         subscriptionRepository.deleteById(id);
     }

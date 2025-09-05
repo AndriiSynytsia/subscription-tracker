@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/subscriptions")
+@Validated
 public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
@@ -81,7 +83,7 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the updated Subscription object and HTTP status code
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Subscription> updateSubscription(@Valid @PathVariable Long id, @RequestBody SubscriptionUpdateRequestDto updateDto) {
+    public ResponseEntity<Subscription> updateSubscription(@PathVariable Long id, @Valid @RequestBody SubscriptionUpdateRequestDto updateDto) {
         Subscription subscription = Subscription.builder()
                 .id(id)
                 .merchantName(updateDto.merchantName())
@@ -91,6 +93,7 @@ public class SubscriptionController {
                 .nextRenewalDate(updateDto.nextRenewalDate())
                 .notificationInterval(updateDto.notificationInterval())
                 .status(updateDto.status())
+                .currency(updateDto.currency())
                 .build();
         Subscription updatedSubscription = subscriptionService.updateSubscription(subscription);
         return ResponseEntity.ok(updatedSubscription);

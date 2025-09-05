@@ -26,11 +26,11 @@ public class Subscription {
     private Long id;
 
     @NotNull
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @NotBlank
-    @Column(name = "merchant_name")
+    @Column(name = "merchant_name", nullable = false, length = 128)
     private String merchantName;
 
     @Positive
@@ -41,7 +41,7 @@ public class Subscription {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "billing_cycle")
+    @Column(name = "billing_cycle", nullable = false)
     private BillingCycle billingCycle;
 
     @FutureOrPresent
