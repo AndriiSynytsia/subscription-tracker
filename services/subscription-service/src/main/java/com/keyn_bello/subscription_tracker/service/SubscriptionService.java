@@ -15,6 +15,7 @@ import java.util.Optional;
 @Service
 public class SubscriptionService {
 
+    public static final String ERROR_MESSAGE_ALREADY_EXIST = "Subscription already exists for userId=%s and merchant=%s";
     private final SubscriptionRepository subscriptionRepository;
 
     public SubscriptionService(SubscriptionRepository subscriptionRepository) {
@@ -36,13 +37,13 @@ public class SubscriptionService {
 
         if (subscriptionRepository.existsByUserIdAndMerchantName(subscription.getUserId(), subscription.getMerchantName())) {
             throw new DuplicateSubscriptionException(
-                    "Subscription already exists for userId=%s and merchant=%s".formatted(subscription.getUserId(), subscription.getMerchantName()));
+                    ERROR_MESSAGE_ALREADY_EXIST.formatted(subscription.getUserId(), subscription.getMerchantName()));
         }
         try {
             return subscriptionRepository.save(subscription);
         } catch (DataIntegrityViolationException exception) {
             throw new DuplicateSubscriptionException(
-                    "Subscription already exists for userId=%s and merchant=%s".formatted(subscription.getUserId(), subscription.getMerchantName()));
+                    ERROR_MESSAGE_ALREADY_EXIST.formatted(subscription.getUserId(), subscription.getMerchantName()));
         }
     }
 
@@ -111,7 +112,7 @@ public class SubscriptionService {
         if (!existing.getMerchantName().equalsIgnoreCase(updatedSubscription.getMerchantName())
                 && subscriptionRepository.existsByUserIdAndMerchantName(existing.getUserId(), updatedSubscription.getMerchantName())) {
             throw new DuplicateSubscriptionException(
-                    "Subscription already exists for userId=%s and merchant=%s".formatted(existing.getUserId(), updatedSubscription.getMerchantName()));
+                    ERROR_MESSAGE_ALREADY_EXIST.formatted(existing.getUserId(), updatedSubscription.getMerchantName()));
         }
         return subscriptionRepository.save(updatedSubscription);
     }

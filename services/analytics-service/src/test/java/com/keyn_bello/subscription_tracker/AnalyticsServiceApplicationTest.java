@@ -17,6 +17,6 @@ class AuthServiceApplicationIT {
 
     @Test
     void contextLoads() {
-        // If the app context starts and Flyway migrates, this test passes
+        // loads the Spring context; test fails if context cannot start
     }
 }
