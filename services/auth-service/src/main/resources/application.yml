@@ -16,3 +16,6 @@ spring:
       maximum-pool-size: 100
       minimum-idle: 2
       connection-timeout: 20000
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:30}
