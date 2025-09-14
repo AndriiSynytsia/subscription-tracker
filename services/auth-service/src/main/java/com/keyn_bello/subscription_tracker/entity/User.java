@@ -43,8 +43,8 @@ public class User implements UserDetails {
     @Pattern(regexp = "^[A-Z][a-z]*$",
             message = "Last name must start with capital letter and contain only letters")
     private String lastName;
-    @Column(name = "profile_image_url")
-    private String profileImageUrl;
+    @Column(name = "profile_image_link")
+    private String profileImageLink;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at", nullable = false)

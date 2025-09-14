@@ -15,7 +15,7 @@ public record AuthResponse(
                 user.getFirstName(),
                 user.getLastName(),
                 user.getId(),
-                user.getProfileImageUrl()
+                user.getProfileImageLink()
         );
         return new AuthResponse(token, userInfo);
     }
@@ -29,7 +29,7 @@ public record AuthResponse(
             String lastName,
             @NotNull
             Long userId,
-            String profileImageUrl
+            String profileImageLink
     ) {
     }
 }
