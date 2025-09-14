@@ -31,17 +31,17 @@ public class User implements UserDetails {
     @NotNull
     @Size(min = 8, max = 100, message = "Password must be between 8 or 100 symbols")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$",
-            message = "Password must contain at least one lowercase, one uppercase, and one digit")
+            message = "Password must contain at least one lowercase, one uppercase, one digit and one special character")
     @Column(name = "password", nullable = false)
     private String password;
     @NotNull
     @Pattern(regexp = "^[A-Z][a-z]*$",
-            message = "Name must start with capital letter and contain only letters")
+            message = "First name must start with capital letter and contain only letters")
     @Column(name = "first_name", nullable = false)
     private String firstName;
     @NotNull
     @Pattern(regexp = "^[A-Z][a-z]*$",
-            message = "Name must start with capital letter and contain only letters")
+            message = "Last name must start with capital letter and contain only letters")
     private String lastName;
     @Column(name = "profile_image_url")
     private String profileImageUrl;
