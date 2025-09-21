@@ -10,6 +10,10 @@ public record AuthResponse(
         UserInfo user
 ) {
     public static AuthResponse from(String token, User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         UserInfo userInfo = new UserInfo(
                 user.getEmail(),
                 user.getFirstName(),
