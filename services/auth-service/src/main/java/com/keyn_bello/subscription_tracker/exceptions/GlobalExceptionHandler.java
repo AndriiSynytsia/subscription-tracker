@@ -16,9 +16,13 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException exception) {
-        return ResponseEntity.badRequest().body(Map.of("error", exception.getMessage()));
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse("INVALID_CREDENTIALS",
+                        HttpStatus.UNAUTHORIZED.value(),
+                        LocalDateTime.now(),
+                        exception.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -36,5 +40,15 @@ public class GlobalExceptionHandler {
         log.error("Registration error: {}", exception.getMessage());
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse("REGISTRATION_FAILED", HttpStatus.BAD_REQUEST.value(), LocalDateTime.now(), exception.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception exception) {
+        log.error("Unexpected server error: {}", exception.getMessage(), exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("INTERNAL_SERVER_ERROR",
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        LocalDateTime.now(),
+                        "An unexpected error occurred. Please try again later."));
     }
 }
