@@ -3,11 +3,13 @@ package com.keyn_bello.subscription_tracker.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -16,14 +18,20 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
-
     @Value("${jwt.expiration:30}")
     private Long jwtExpirationMinutes;
 
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    private SecretKey secretKey;
+
+    @PostConstruct
+    private void initSecretKey() {
+        this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    }
+
     public String generateToken(String email, Long userId) {
-        SecretKey secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         Instant now = Instant.now();
 
         return Jwts.builder()
@@ -34,6 +42,7 @@ public class JwtUtil {
                 .signWith(secretKey)
                 .compact();
     }
+
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -62,7 +71,6 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        SecretKey secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
