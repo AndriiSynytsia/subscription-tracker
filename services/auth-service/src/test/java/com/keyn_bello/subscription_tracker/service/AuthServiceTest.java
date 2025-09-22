@@ -64,7 +64,7 @@ class AuthServiceTest {
         @DisplayName("Should login user successfully when user use valid credentials")
         void shouldLoginUserSuccessfully() {
             //Given
-            LoginRequest request = new LoginRequest("test@example.com", "Password123!");
+            LoginRequest request = new LoginRequest("test@example.com", "P@ssword123!");
             User user = User.builder()
                     .id(1L)
                     .email("test@example.com")
@@ -101,7 +101,7 @@ class AuthServiceTest {
         @DisplayName("Should throw an exception when user not found")
         void shouldThrowExceptionWhenUserNotFound() {
             //Given
-            LoginRequest request = new LoginRequest("test@example.com", "Password123!");
+            LoginRequest request = new LoginRequest("test@example.com", "P@ssword123!");
 
             when(userRepository.findByEmail(request.email())).thenReturn(Optional.empty());
 
@@ -150,7 +150,7 @@ class AuthServiceTest {
         @DisplayName("Should throw an exception when user is not active")
         void shouldThrowExceptionWhenUserIsNotActive() {
             //Given
-            LoginRequest request = new LoginRequest("test@example.com", "Password123!");
+            LoginRequest request = new LoginRequest("test@example.com", "P@ssword123!");
             User user = User.builder()
                     .id(1L)
                     .email("test@example.com")
@@ -170,6 +170,32 @@ class AuthServiceTest {
 
             verify(jwtUtil, never()).generateToken(any(), any());
         }
+
+        /**
+         * Test case to verify exception handling when database error occurs during registration.
+         * Mocks the necessary dependencies and verifies the expected behavior.
+         */
+        @Test
+        @DisplayName("Should throw UserRegistrationException when database error occurs")
+        void shouldThrowExceptionWhenDatabaseErrorOccurs() {
+            //Given
+            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
+            when(userRepository.existsByEmail(request.email())).thenReturn(false);
+            when(passwordEncoder.encode(request.password())).thenReturn("hashedPassword");
+            when(userRepository.save(any(User.class))).thenThrow(new org.springframework.dao.DataIntegrityViolationException("Database constraint violation"));
+
+            //When & Then
+            assertThatThrownBy(() -> authService.register(request))
+                    .isInstanceOf(UserRegistrationException.class)
+                    .hasMessage("Registration failed due to database error")
+                    .hasCauseInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+
+            verify(userRepository).existsByEmail(request.email());
+            verify(passwordEncoder).encode(request.password());
+            verify(userRepository).save(any(User.class));
+            verify(jwtUtil, never()).generateToken(any(), any());
+        }
+
     }
 
     /**
@@ -188,7 +214,7 @@ class AuthServiceTest {
         @DisplayName("Should register user successfully")
         void shouldRegisterUserSuccessfully() {
             //Given
-            RegisterRequest request = new RegisterRequest("test@example.com", "Password1234", "John", "Doe");
+            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword1234", "John", "Doe");
             User savedUser = User.builder()
                     .id(1L)
                     .email("test@example.com")
@@ -227,7 +253,7 @@ class AuthServiceTest {
         @DisplayName("Should throw an exception when email already exists")
         void shouldThrowExceptionWhenEmailAlreadyExists() {
             // Given
-            RegisterRequest request = new RegisterRequest("test@example.com", "Password123!", "John", "Doe");
+            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
             when(userRepository.existsByEmail(request.email())).thenReturn(true);
 
             // When & Then
@@ -248,14 +274,14 @@ class AuthServiceTest {
         @DisplayName("Should throw an exception when password encoding fails")
         void shouldThrowExceptionWhenPasswordEncodingFails() {
             //Given
-            RegisterRequest request = new RegisterRequest("test@example.com", "Password123!", "John", "Doe");
+            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
             when(userRepository.existsByEmail(request.email())).thenReturn(false);
-            when(passwordEncoder.encode(request.password())).thenThrow(new RuntimeException("Encoding failed"));
+            when(passwordEncoder.encode(request.password())).thenThrow(new UserRegistrationException("Encoding failed", new RuntimeException()));
 
             //When & Then
             assertThatThrownBy(() -> authService.register(request))
                     .isInstanceOf(UserRegistrationException.class)
-                    .hasMessage("Registration failed")
+                    .hasMessage("Encoding failed")
                     .hasCauseInstanceOf(RuntimeException.class);
         }
 
@@ -267,15 +293,15 @@ class AuthServiceTest {
         @DisplayName("Should throw an exception when user saving fails")
         void shouldThrowExceptionWhenUserSavingFails() {
             //Given
-            RegisterRequest request = new RegisterRequest("test@example.com", "Password123!", "John", "Doe");
+            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
             when(userRepository.existsByEmail(request.email())).thenReturn(false);
             when(passwordEncoder.encode(request.password())).thenReturn("hashedPassword");
-            when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("Saving failed"));
+            when(userRepository.save(any(User.class))).thenThrow(new UserRegistrationException("Saving failed", new RuntimeException()));
 
             //When & Then
             assertThatThrownBy(() -> authService.register(request))
                     .isInstanceOf(UserRegistrationException.class)
-                    .hasMessage("Registration failed")
+                    .hasMessage("Saving failed")
                     .hasCauseInstanceOf(RuntimeException.class);
         }
 
@@ -287,7 +313,7 @@ class AuthServiceTest {
         @DisplayName("Should throw an exception when JWT generation fails")
         void shouldThrowExceptionWhenJwtGenerationFails() {
             //Given
-            RegisterRequest request = new RegisterRequest("test@example.com", "Password123!", "John", "Doe");
+            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
             User savedUser = User.builder()
                     .id(1L)
                     .email("test@example.com")
@@ -297,12 +323,12 @@ class AuthServiceTest {
             when(userRepository.existsByEmail(request.email())).thenReturn(false);
             when(passwordEncoder.encode(request.password())).thenReturn("hashedPassword");
             when(userRepository.save(any(User.class))).thenReturn(savedUser);
-            when(jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId())).thenThrow(new RuntimeException("JWT error"));
+            when(jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId())).thenThrow(new UserRegistrationException("JWT error", new RuntimeException()));
 
             //When & Then
             assertThatThrownBy(() -> authService.register(request))
                     .isInstanceOf(UserRegistrationException.class)
-                    .hasMessage("Registration failed")
+                    .hasMessage("JWT error")
                     .hasCauseInstanceOf(RuntimeException.class);
         }
     }
