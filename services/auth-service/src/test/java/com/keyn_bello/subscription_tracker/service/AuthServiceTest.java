@@ -42,9 +42,6 @@ class AuthServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
-    @Mock
-    private MeterRegistry meterRegistry;
-
     @InjectMocks
     private AuthService authService;
 
