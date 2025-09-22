@@ -1,7 +1,6 @@
 package com.keyn_bello.subscription_tracker.api;
 
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
-import com.keyn_bello.subscription_tracker.dto.SubscriptionResponseDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
