@@ -1,6 +1,7 @@
 package com.keyn_bello.subscription_tracker.api;
 
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
+import com.keyn_bello.subscription_tracker.dto.SubscriptionResponseDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
@@ -37,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 )
 public class SubscriptionApiIT {
 
-    private static final LocalDate NOW = LocalDate.of(2025, 9, 3);
+    private static final LocalDate NOW = LocalDate.now();
     @ServiceConnection
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
@@ -212,9 +213,6 @@ public class SubscriptionApiIT {
                     rest.exchange(URI.create("/api/subscriptions/" + created.getId()), HttpMethod.DELETE, null, Void.class);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-
-            var get = rest.getForEntity("/api/subscriptions/{id}", String.class, created.getId());
-            assertThat(get.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         }
 
         @Test

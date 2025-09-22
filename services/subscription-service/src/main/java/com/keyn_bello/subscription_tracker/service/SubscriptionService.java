@@ -34,17 +34,10 @@ public class SubscriptionService {
         if (subscription == null) {
             throw new IllegalArgumentException("Subscription cannot be null");
         }
-
         if (subscriptionRepository.existsByUserIdAndMerchantName(subscription.getUserId(), subscription.getMerchantName())) {
-            throw new DuplicateSubscriptionException(
-                    ERROR_MESSAGE_ALREADY_EXIST.formatted(subscription.getUserId(), subscription.getMerchantName()));
+            throw new DuplicateSubscriptionException(ERROR_MESSAGE_ALREADY_EXIST.formatted(subscription.getUserId(), subscription.getMerchantName()));
         }
-        try {
-            return subscriptionRepository.save(subscription);
-        } catch (DataIntegrityViolationException exception) {
-            throw new DuplicateSubscriptionException(
-                    ERROR_MESSAGE_ALREADY_EXIST.formatted(subscription.getUserId(), subscription.getMerchantName()));
-        }
+        return saveSubscriptionWithErrorHandling(subscription, subscription.getUserId(), subscription.getMerchantName());
     }
 
     /**
@@ -91,9 +84,7 @@ public class SubscriptionService {
         if (!subscriptionRepository.existsById(subscription.getId())) {
             throw new SubscriptionNotFoundException(subscription.getId());
         }
-
-        Subscription existing = subscriptionRepository.findById(subscription.getId())
-                .orElseThrow(() -> new SubscriptionNotFoundException(subscription.getId()));
+        Subscription existing = subscriptionRepository.findById(subscription.getId()).orElseThrow(() -> new SubscriptionNotFoundException(subscription.getId()));
 
         Subscription updatedSubscription = Subscription.builder()
                 .id(existing.getId())
@@ -114,7 +105,19 @@ public class SubscriptionService {
             throw new DuplicateSubscriptionException(
                     ERROR_MESSAGE_ALREADY_EXIST.formatted(existing.getUserId(), updatedSubscription.getMerchantName()));
         }
-        return subscriptionRepository.save(updatedSubscription);
+
+        return saveSubscriptionWithErrorHandling(updatedSubscription, existing.getUserId(), existing.getMerchantName());
+    }
+
+    private Subscription saveSubscriptionWithErrorHandling(Subscription subscription, Long userId, String merchantName) {
+        try {
+            return subscriptionRepository.save(subscription);
+        } catch (DataIntegrityViolationException e) {
+            if (e.getMessage().contains("duplicate key value")) {
+                throw new DuplicateSubscriptionException(ERROR_MESSAGE_ALREADY_EXIST.formatted(userId, merchantName));
+            }
+            throw e;
+        }
     }
 
     /**
@@ -130,7 +133,14 @@ public class SubscriptionService {
         if (!subscriptionRepository.existsById(id)) {
             throw new SubscriptionNotFoundException("Subscription with id " + id + " not found");
         }
-        subscriptionRepository.deleteById(id);
+        try {
+            subscriptionRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            if (e.getMessage().contains("duplicate key value")) {
+                throw new DuplicateSubscriptionException("Subscription already exists for this merchant");
+            }
+            throw e;
+        }
     }
 
     /**

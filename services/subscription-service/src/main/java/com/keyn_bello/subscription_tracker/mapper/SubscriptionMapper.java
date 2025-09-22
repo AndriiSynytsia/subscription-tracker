@@ -9,6 +9,8 @@ import java.util.Objects;
 @Component
 public class SubscriptionMapper {
     public SubscriptionResponseDto toDto(Subscription subscription) {
+        Objects.requireNonNull(subscription, "Subscription cannot be null");
+
         return new SubscriptionResponseDto(
                 subscription.getId(),
                 subscription.getUserId(),

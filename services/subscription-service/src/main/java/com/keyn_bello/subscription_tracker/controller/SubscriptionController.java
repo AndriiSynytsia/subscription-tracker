@@ -84,8 +84,15 @@ public class SubscriptionController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Subscription> updateSubscription(@PathVariable Long id, @Valid @RequestBody SubscriptionUpdateRequestDto updateDto) {
+        Optional<Subscription> existingSubscription = subscriptionService.getSubscriptionById(id);
+
+        if (existingSubscription.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
         Subscription subscription = Subscription.builder()
                 .id(id)
+                .userId(existingSubscription.get().getUserId())
                 .merchantName(updateDto.merchantName())
                 .price(updateDto.price())
                 .billingCycle(updateDto.billingCycle())
@@ -107,9 +114,6 @@ public class SubscriptionController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubscription(@PathVariable Long id) {
-        if (subscriptionService.getSubscriptionById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
         subscriptionService.deleteSubscription(id);
         return ResponseEntity.noContent().build();
     }

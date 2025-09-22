@@ -3,6 +3,7 @@ package com.keyn_bello.subscription_tracker.exceptions;
 import com.keyn_bello.subscription_tracker.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     public static final String MESSAGE_KEY = "message";
@@ -30,6 +33,17 @@ public class GlobalExceptionHandler {
         );
     }
 
+    private static String extractDataIntegrityMessage(DataIntegrityViolationException ex) {
+        Throwable root = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause() : ex;
+        String msg = root.getMessage();
+        if (msg == null) return "Data integrity violation";
+        String lower = msg.toLowerCase(Locale.ROOT);
+        if (lower.contains("duplicate key") || lower.contains("unique")) {
+            return "Conflict: duplicate resource violates a unique constraint";
+        }
+        return "Data integrity violation";
+    }
+
     /**
      * Validation handler for MethodArgumentNotValidException
      *
@@ -42,7 +56,9 @@ public class GlobalExceptionHandler {
         body.put(MESSAGE_KEY, "Validation failed");
         body.put("errors", exception.getBindingResult().getFieldErrors().stream()
                 .map(fe -> {
-                    assert fe.getDefaultMessage() != null;
+                    if (fe.getDefaultMessage() == null) {
+                        log.warn("Field error has null default message for field: {}", fe.getField());
+                    }
                     return Map.of(FIELD_KEY, fe.getField(), MESSAGE_KEY, fe.getDefaultMessage());
                 }).toList());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
@@ -53,10 +69,12 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put(MESSAGE_KEY, "Invalid request");
         body.put("errors", exception.getBindingResult().getFieldErrors().stream()
-                .map(fe -> {
-                    assert fe.getDefaultMessage() != null;
-                    return Map.of(FIELD_KEY, fe.getField(), MESSAGE_KEY, fe.getDefaultMessage());
-                }).toList());
+                .map(fe -> Map.of(
+                        FIELD_KEY, fe.getField(),
+                        MESSAGE_KEY, fe.getDefaultMessage() != null ?
+                                fe.getDefaultMessage() :
+                                fe.getCode()))
+                .toList());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
@@ -107,7 +125,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException exception, HttpServletRequest request) {
-        ErrorResponse errorResponse = getErrorResponse(exception, request, HttpStatus.CONFLICT);
+        String message = extractDataIntegrityMessage(exception);
+        ErrorResponse errorResponse = new ErrorResponse(
+                message,
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now(),
+                request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 }
