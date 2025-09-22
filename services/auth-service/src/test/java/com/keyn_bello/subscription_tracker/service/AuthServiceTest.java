@@ -7,7 +7,6 @@ import com.keyn_bello.subscription_tracker.entity.User;
 import com.keyn_bello.subscription_tracker.exceptions.UserRegistrationException;
 import com.keyn_bello.subscription_tracker.repository.UserRepository;
 import com.keyn_bello.subscription_tracker.util.JwtUtil;
-import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
