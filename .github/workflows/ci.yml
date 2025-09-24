@@ -9,8 +9,6 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
 
 jobs:
   detect-changes:
@@ -109,7 +107,7 @@ jobs:
         run: |
           ./mvnw -B verify sonar:sonar \
           -DskipTests=false \
+          -Dsonar.organization=subscription-tracker-sc \
           -Dsonar.projectKey=AndriiSynytsia_subscription-tracker \
-          -Dsonar.organizationKey=subscription-tracker-sc \
           -Dsonar.junit.reportPaths=**/target/surefire-reports \
           -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml

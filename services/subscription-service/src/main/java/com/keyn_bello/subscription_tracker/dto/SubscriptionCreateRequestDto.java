@@ -11,6 +11,7 @@ public record SubscriptionCreateRequestDto(
         @NotNull Long userId,
         @NotBlank @Size(max = 80) String merchantName,
         @NotNull @Positive @Digits(integer = 8, fraction = 2) BigDecimal price,
+        @NotBlank @Size(max = 3) String currency,
         @NotNull BillingCycle billingCycle,
         @NotNull @Future LocalDate nextRenewalDate,
         @PositiveOrZero @Max(365) Integer notificationInterval,

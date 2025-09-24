@@ -4,6 +4,7 @@ import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
+import com.keyn_bello.subscription_tracker.util.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.*;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -44,11 +46,20 @@ public class SubscriptionApiIT {
     @Autowired
     TestRestTemplate rest;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    private String createTestToken(Long userId) {
+        return jwtUtil.generateToken(userId.toString());
+    }
+
+
     private SubscriptionCreateRequestDto validDto(String merchant, Long userId) {
         return new SubscriptionCreateRequestDto(
                 userId,
                 merchant,
                 BigDecimal.valueOf(11.99),
+                "USD",
                 BillingCycle.MONTHLY,
                 NOW.plusDays(10),
                 7,
@@ -78,7 +89,7 @@ public class SubscriptionApiIT {
         @DisplayName("400 Bad Request on bean validation failure (blank merchant)")
         void create_returns400_onInvalidDto() {
             var dto = new SubscriptionCreateRequestDto(
-                    1L, "  ", new BigDecimal("10.00"),
+                    1L, "  ", new BigDecimal("10.00"), "USD",
                     BillingCycle.MONTHLY, NOW.plusDays(10),
                     7, PaymentMethod.CREDIT_CARD
             );
@@ -208,8 +219,11 @@ public class SubscriptionApiIT {
             var created = rest.postForEntity("/api/subscriptions", validDto("HBO", 1L), Subscription.class).getBody();
             assertThat(created).isNotNull();
 
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(createTestToken(1L));
+            HttpEntity<Void> req = new HttpEntity<>(headers);
             ResponseEntity<Void> resp =
-                    rest.exchange(URI.create("/api/subscriptions/" + created.getId()), HttpMethod.DELETE, null, Void.class);
+                    rest.exchange(URI.create("/api/subscriptions/" + created.getId()), HttpMethod.DELETE, req, Void.class);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }

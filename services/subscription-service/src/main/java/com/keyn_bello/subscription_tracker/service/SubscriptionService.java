@@ -34,9 +34,6 @@ public class SubscriptionService {
         if (subscription == null) {
             throw new IllegalArgumentException("Subscription cannot be null");
         }
-        if (subscriptionRepository.existsByUserIdAndMerchantName(subscription.getUserId(), subscription.getMerchantName())) {
-            throw new DuplicateSubscriptionException(ERROR_MESSAGE_ALREADY_EXIST.formatted(subscription.getUserId(), subscription.getMerchantName()));
-        }
         return saveSubscriptionWithErrorHandling(subscription, subscription.getUserId(), subscription.getMerchantName());
     }
 
@@ -123,15 +120,19 @@ public class SubscriptionService {
     /**
      * Method deletes a subscription from the database
      *
-     * @param id - id of the subscription to be deleted
+     * @param id     - id of the subscription to be deleted
+     * @param userId - id of the user who owns the subscription
      */
     @Transactional
-    public void deleteSubscription(Long id) {
+    public void deleteSubscription(Long id, Long userId) {
         if (id == null) {
             throw new IllegalArgumentException("Subscription id cannot be null");
         }
-        if (!subscriptionRepository.existsById(id)) {
-            throw new SubscriptionNotFoundException("Subscription with id " + id + " not found");
+        Subscription subscription = subscriptionRepository.findById(id)
+                .orElseThrow(() -> new SubscriptionNotFoundException("Subscription with id " + id + " not found"));
+
+        if (!subscription.getUserId().equals(userId)) {
+            throw new SubscriptionNotFoundException("Access denied: You can only delete your own subscription");
         }
         try {
             subscriptionRepository.deleteById(id);

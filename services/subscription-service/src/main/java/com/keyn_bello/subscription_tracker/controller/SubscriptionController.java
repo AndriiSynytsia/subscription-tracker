@@ -1,14 +1,18 @@
 package com.keyn_bello.subscription_tracker.controller;
 
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
+import com.keyn_bello.subscription_tracker.dto.SubscriptionResponseDto;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionUpdateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
+import com.keyn_bello.subscription_tracker.mapper.SubscriptionMapper;
 import com.keyn_bello.subscription_tracker.service.SubscriptionService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +28,7 @@ import java.util.Optional;
 public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
+    private final SubscriptionMapper subscriptionMapper = new SubscriptionMapper();
 
     public SubscriptionController(SubscriptionService subscriptionService) {
         this.subscriptionService = subscriptionService;
@@ -66,12 +71,22 @@ public class SubscriptionController {
     /**
      * REST endpoint to retrieve all subscriptions for a user
      *
-     * @param userId - id of the user whose subscriptions are to be retrieved
+     * @param authentication - authentication object containing the user's id
      * @return - ResponseEntity containing a list of Subscription objects and HTTP status code
      */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Subscription>> getUserSubscriptions(@PathVariable Long userId) {
-        List<Subscription> userSubscriptions = subscriptionService.getAllSubscriptionsByUser(userId);
+    @GetMapping("/me")
+    public ResponseEntity<List<SubscriptionResponseDto>> getMySubscriptions(Authentication authentication) {
+        System.out.println("Authentication: " + authentication);
+        System.out.println("Authentication name: " + (authentication != null ? authentication.getName() : "null"));
+
+        if (authentication == null) {
+            throw new RuntimeException("Authentication is null");
+        }
+        Long userId = Long.valueOf(authentication.getName());
+        var userSubscriptions = subscriptionService.getAllSubscriptionsByUser(userId)
+                .stream()
+                .map(subscriptionMapper::toDto)
+                .toList();
         return ResponseEntity.ok(userSubscriptions);
     }
 
@@ -83,7 +98,7 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the updated Subscription object and HTTP status code
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Subscription> updateSubscription(@PathVariable Long id, @Valid @RequestBody SubscriptionUpdateRequestDto updateDto) {
+    public ResponseEntity<SubscriptionResponseDto> updateSubscription(@PathVariable Long id, @Valid @RequestBody SubscriptionUpdateRequestDto updateDto) {
         Optional<Subscription> existingSubscription = subscriptionService.getSubscriptionById(id);
 
         if (existingSubscription.isEmpty()) {
@@ -103,7 +118,7 @@ public class SubscriptionController {
                 .currency(updateDto.currency())
                 .build();
         Subscription updatedSubscription = subscriptionService.updateSubscription(subscription);
-        return ResponseEntity.ok(updatedSubscription);
+        return ResponseEntity.ok(subscriptionMapper.toDto(updatedSubscription));
     }
 
     /**
@@ -113,8 +128,9 @@ public class SubscriptionController {
      * @return - ResponseEntity with HTTP status code
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSubscription(@PathVariable Long id) {
-        subscriptionService.deleteSubscription(id);
+    public ResponseEntity<Void> deleteSubscription(@PathVariable Long id, Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
+        subscriptionService.deleteSubscription(id, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -125,8 +141,11 @@ public class SubscriptionController {
      * @return - ResponseEntity containing a list of Subscription objects and HTTP status code
      */
     @GetMapping("/renewals")
-    public ResponseEntity<List<Subscription>> getUpcomingRenewals(@RequestParam @Min(1) @Max(365) int daysAhead) {
-        List<Subscription> upcomingRenewals = subscriptionService.getUpcomingRenewals(daysAhead);
+    public ResponseEntity<List<SubscriptionResponseDto>> getUpcomingRenewals(@RequestParam @Min(1) @Max(365) int daysAhead, Authentication authentication) {
+        List<SubscriptionResponseDto> upcomingRenewals = subscriptionService.getUpcomingRenewals(daysAhead)
+                .stream()
+                .map(subscriptionMapper::toDto)
+                .toList();
         return ResponseEntity.ok(upcomingRenewals);
     }
 }

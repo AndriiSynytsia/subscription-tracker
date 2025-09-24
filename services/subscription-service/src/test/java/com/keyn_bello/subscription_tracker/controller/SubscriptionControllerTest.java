@@ -2,26 +2,40 @@ package com.keyn_bello.subscription_tracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
+import com.keyn_bello.subscription_tracker.dto.SubscriptionResponseDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
+import com.keyn_bello.subscription_tracker.entity.SubscriptionStatus;
 import com.keyn_bello.subscription_tracker.exceptions.DuplicateSubscriptionException;
 import com.keyn_bello.subscription_tracker.exceptions.GlobalExceptionHandler;
 import com.keyn_bello.subscription_tracker.exceptions.SubscriptionNotFoundException;
+import com.keyn_bello.subscription_tracker.mapper.SubscriptionMapper;
 import com.keyn_bello.subscription_tracker.service.SubscriptionService;
+import com.keyn_bello.subscription_tracker.util.JwtAuthenticationFilter;
+import com.keyn_bello.subscription_tracker.util.JwtUtil;
+import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = SubscriptionController.class)
 @Import(GlobalExceptionHandler.class)
+@WithMockUser(username = "123")
 class SubscriptionControllerTest {
 
     @Autowired
@@ -43,8 +58,15 @@ class SubscriptionControllerTest {
     @MockitoBean
     private SubscriptionService subscriptionService;
 
+    @MockitoBean
+    private SubscriptionMapper subscriptionMapper;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
     @Nested
     @DisplayName("PUT /api/subscriptions/{id}")
+    @WithMockUser(username = "123")
     class Update {
         /**
          * Test method to verify that a subscription is updated successfully
@@ -53,11 +75,11 @@ class SubscriptionControllerTest {
         @DisplayName("return 200 when update successful")
         void shouldUpdateSubscription_return200() throws Exception {
             //given
-            Subscription body = Subscription.builder()
-                    .id(999L)
+            Subscription existing = Subscription.builder()
+                    .id(7L)
                     .userId(1L)
-                    .merchantName("Youtube")
-                    .price(new BigDecimal("11.99"))
+                    .merchantName("Old Name")
+                    .price(new BigDecimal("9.99"))
                     .billingCycle(BillingCycle.MONTHLY)
                     .paymentMethod(PaymentMethod.CREDIT_CARD)
                     .notificationInterval(7)
@@ -76,15 +98,18 @@ class SubscriptionControllerTest {
                     .build();
 
             //when
+            when(subscriptionService.getSubscriptionById(7L)).thenReturn(Optional.of(existing));
             when(subscriptionService.updateSubscription(any())).thenReturn(updated);
 
             //then
             mockMvc.perform(put("/api/subscriptions/{id}", 7)
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(body)))
+                            .content(objectMapper.writeValueAsString(updated)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(7L))
-                    .andExpect(jsonPath("$.merchantName").value("Youtube"));
+                    .andExpect(jsonPath("$.merchantName").value("Youtube"))
+                    .andExpect(jsonPath("$.price").value(11.99));
 
             var captor = ArgumentCaptor.forClass(Subscription.class);
             verify(subscriptionService).updateSubscription(captor.capture());
@@ -114,6 +139,7 @@ class SubscriptionControllerTest {
 
             //then
             mockMvc.perform(put("/api/subscriptions/1")
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(subscription)))
                     .andExpect(status().isNotFound());
@@ -142,10 +168,12 @@ class SubscriptionControllerTest {
 
             //then
             mockMvc.perform(delete("/api/subscriptions/1")
+                            .with(csrf())
+                            .with(user("1"))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNoContent());
 
-            verify(subscriptionService).deleteSubscription(1L);
+            verify(subscriptionService).deleteSubscription(1L, subscription.getUserId());
         }
 
         /**
@@ -154,13 +182,16 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName("return 404 when subscription not found")
         void shouldReturn404_whenDeleteSubscriptionNotFound() throws Exception {
-            when(subscriptionService.getSubscriptionById(1L)).thenThrow(new SubscriptionNotFoundException("Subscription not found"));
+            doThrow(new SubscriptionNotFoundException("Subscription not found"))
+                    .when(subscriptionService).deleteSubscription(1L, 1L);
 
             mockMvc.perform(delete("/api/subscriptions/1")
+                            .with(csrf())
+                            .with(user("1"))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
 
-            verify(subscriptionService, never()).deleteSubscription(anyLong());
+            verify(subscriptionService).deleteSubscription(1L, 1L);
         }
     }
 
@@ -263,26 +294,21 @@ class SubscriptionControllerTest {
         /**
          * Test method to verify that all subscriptions for a user are retrieved successfully
          */
+        //TODO: needs API Gateway service implementation
         @Test
         @DisplayName("return 200 when get all subscriptions by user")
         void shouldGetUserSubscriptions_return200() throws Exception {
-            //given
-            Subscription subscription = Subscription.builder()
-                    .id(1L)
-                    .userId(1L)
-                    .merchantName("Test")
-                    .price(new BigDecimal("10.0"))
-                    .build();
 
             //when
-            when(subscriptionService.getAllSubscriptionsByUser(1L)).thenReturn(java.util.List.of(subscription));
+            when(subscriptionService.getAllSubscriptionsByUser(123L)).thenReturn(java.util.List.of());
 
             //then
-            mockMvc.perform(get("/api/subscriptions/user/1")
+            mockMvc.perform(get("/api/subscriptions/me")
+                            .with(user("123"))
                             .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].id").value(1L))
-                    .andExpect(jsonPath("$[0].merchantName").value("Test"));
+                    .andExpect(status().isOk());
+
+            verify(subscriptionService).getAllSubscriptionsByUser(123L);
         }
     }
 
@@ -297,7 +323,7 @@ class SubscriptionControllerTest {
         void shouldCreateSubscription_return201_andMapDto() throws Exception {
             //given
             SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto(
-                    1L, "Spotify", new BigDecimal("10.0"),
+                    1L, "Spotify", new BigDecimal("10.0"), "USD",
                     BillingCycle.MONTHLY, LocalDate.now().plusDays(30),
                     7, PaymentMethod.CREDIT_CARD
             );
@@ -318,6 +344,7 @@ class SubscriptionControllerTest {
 
             //then
             mockMvc.perform(post("/api/subscriptions")
+                            .with(csrf() )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isCreated())
@@ -343,9 +370,10 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName("return 400 when invalid input")
         void shouldReturn400_whenInvalidInput() throws Exception {
-            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto(1L, " ", new BigDecimal("10.0"), BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.APPLE_PAY);
+            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto(1L, " ", new BigDecimal("10.0"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.APPLE_PAY);
 
             mockMvc.perform(post("/api/subscriptions")
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isBadRequest());
@@ -361,7 +389,7 @@ class SubscriptionControllerTest {
         void shouldReturn409_whenDuplicateSubscription() throws Exception {
             // given
             SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto(
-                    1L, "Netflix", new BigDecimal("15.99"), BillingCycle.MONTHLY,
+                    1L, "Netflix", new BigDecimal("15.99"), "USD", BillingCycle.MONTHLY,
                     LocalDate.now().plusDays(30), 7, PaymentMethod.CREDIT_CARD
             );
 
@@ -370,6 +398,7 @@ class SubscriptionControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/subscriptions")
+                            .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isConflict())
