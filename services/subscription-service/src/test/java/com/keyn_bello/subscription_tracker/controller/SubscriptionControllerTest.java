@@ -209,7 +209,6 @@ class SubscriptionControllerTest {
         /**
          * Test method to verify that all subscriptions for a user are retrieved successfully
          */
-        //TODO: needs API Gateway service implementation
         @Test
         @DisplayName("return 200 when get all subscriptions by user")
         void shouldGetUserSubscriptions_return200() throws Exception {

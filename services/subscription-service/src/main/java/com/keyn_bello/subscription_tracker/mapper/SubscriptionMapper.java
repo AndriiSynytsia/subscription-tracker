@@ -20,7 +20,7 @@ public class SubscriptionMapper {
                 subscription.getBillingCycle(),
                 subscription.getNextRenewalDate(),
                 subscription.getNotificationInterval(),
-                subscription.getStatus(),
+                subscription.getSubscriptionStatus(),
                 subscription.getPaymentMethod(),
                 subscription.getCreatedAt(),
                 subscription.getUpdatedAt()

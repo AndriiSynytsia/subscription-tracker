@@ -17,7 +17,7 @@ public record SubscriptionResponseDto(
         BillingCycle billingCycle,
         LocalDate nextRenewalDate,
         Integer notificationInterval,
-        SubscriptionStatus status,
+        SubscriptionStatus subscriptionStatus,
         PaymentMethod paymentMethod,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

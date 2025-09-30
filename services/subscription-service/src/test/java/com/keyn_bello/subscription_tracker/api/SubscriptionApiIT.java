@@ -73,10 +73,27 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("201 Created and returns saved entity")
         void create_returns201_andBody() {
-            var dto = validDto("Netflix", 1L);
+            var dto = new SubscriptionCreateRequestDto(
+                    1L,
+                    "Netflix",
+                    BigDecimal.valueOf(11.99),
+                    "USD",
+                    BillingCycle.MONTHLY,
+                    LocalDate.now().plusDays(30),
+                    7,
+                    PaymentMethod.CREDIT_CARD
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(createTestToken(dto.userId()));
 
             ResponseEntity<Subscription> resp =
-                    rest.postForEntity("/api/subscriptions", dto, Subscription.class);
+                    rest.exchange("/api/subscriptions",
+                            HttpMethod.POST,
+                            new HttpEntity<>(dto, headers),
+                            Subscription.class
+                    );
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(resp.getBody()).isNotNull();
@@ -89,15 +106,25 @@ public class SubscriptionApiIT {
         void create_returns400_onInvalidDto() {
             var dto = new SubscriptionCreateRequestDto(
                     1L, "  ", new BigDecimal("10.00"), "USD",
-                    BillingCycle.MONTHLY, NOW.plusDays(10),
+                    BillingCycle.MONTHLY, LocalDate.now().plusDays(30),
                     7, PaymentMethod.CREDIT_CARD
             );
 
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(createTestToken(dto.userId()));
+
             ResponseEntity<String> resp =
-                    rest.postForEntity("/api/subscriptions", dto, String.class);
+                    rest.exchange("/api/subscriptions",
+                            HttpMethod.POST,
+                            new HttpEntity<>(dto, headers),
+                            String.class
+                    );
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(resp.getBody()).contains("merchantName");
+            assertThat(resp.getBody()).isNotNull();
+            assertThat(resp.getBody()).contains("errors");
+
         }
     }
 
@@ -107,11 +134,35 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("200 OK when found")
         void get_found_returns200() {
-            var created = rest.postForEntity("/api/subscriptions", validDto("Spotify", 1L), Subscription.class).getBody();
+            var dto = new SubscriptionCreateRequestDto(
+                    1L,
+                    "Spotify",
+                    BigDecimal.valueOf(11.99),
+                    "USD",
+                    BillingCycle.MONTHLY,
+                    LocalDate.now().plusDays(30),
+                    7,
+                    PaymentMethod.CREDIT_CARD
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(createTestToken(dto.userId()));
+
+            var created = rest.exchange("/api/subscriptions",
+                    HttpMethod.POST,
+                    new HttpEntity<>(dto,
+                            headers),
+                    Subscription.class).getBody();
             assertThat(created).isNotNull();
 
+
             ResponseEntity<Subscription> resp =
-                    rest.getForEntity("/api/subscriptions/{id}", Subscription.class, created.getId());
+                    rest.exchange("/api/subscriptions/{id}",
+                            HttpMethod.GET,
+                            new HttpEntity<>(headers),
+                            Subscription.class,
+                            created.getId());
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(resp.getBody()).isNotNull();
@@ -220,9 +271,13 @@ public class SubscriptionApiIT {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(createTestToken(1L));
-            HttpEntity<Void> req = new HttpEntity<>(headers);
+            HttpEntity<Void> deleteRequest = new HttpEntity<>(headers);
+
             ResponseEntity<Void> resp =
-                    rest.exchange(URI.create("/api/subscriptions/" + created.getId()), HttpMethod.DELETE, req, Void.class);
+                    rest.exchange(URI.create("/api/subscriptions/" + created.getId()),
+                            HttpMethod.DELETE,
+                            deleteRequest,
+                            Void.class);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }

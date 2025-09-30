@@ -92,7 +92,7 @@ public class SubscriptionService {
                 .billingCycle(subscription.getBillingCycle() != null ? subscription.getBillingCycle() : existing.getBillingCycle())
                 .nextRenewalDate(subscription.getNextRenewalDate() != null ? subscription.getNextRenewalDate() : existing.getNextRenewalDate())
                 .notificationInterval(subscription.getNotificationInterval() > 0 ? subscription.getNotificationInterval() : existing.getNotificationInterval())
-                .status(subscription.getStatus() != null ? subscription.getStatus() : existing.getStatus())
+                .subscriptionStatus(subscription.getSubscriptionStatus() != null ? subscription.getSubscriptionStatus() : existing.getSubscriptionStatus())
                 .paymentMethod(subscription.getPaymentMethod() != null ? subscription.getPaymentMethod() : existing.getPaymentMethod())
                 .createdAt(existing.getCreatedAt())
                 .build();

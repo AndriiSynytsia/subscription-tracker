@@ -30,6 +30,7 @@ public class Subscription {
     private Long userId;
 
     @NotBlank
+    @NotNull
     @Column(name = "merchant_name", nullable = false, length = 128)
     private String merchantName;
 
@@ -56,11 +57,12 @@ public class Subscription {
     @NotNull
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    private SubscriptionStatus status = SubscriptionStatus.ACTIVE;
+    @Column(name = "subscription_status", nullable = false)
+    private SubscriptionStatus subscriptionStatus = SubscriptionStatus.ACTIVE;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method")
+    @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
 
     @Column(name = "created_at")

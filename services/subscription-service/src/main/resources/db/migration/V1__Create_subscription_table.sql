@@ -7,7 +7,7 @@ CREATE TABLE subscriptions (
     billing_cycle VARCHAR(50) NOT NULL CHECK (billing_cycle IN ('MONTHLY', 'YEARLY', 'WEEKLY', 'DAILY')),
     next_renewal_date DATE NOT NULL,
     notification_interval INT NOT NULL CHECK (notification_interval >= 0 AND notification_interval <= 365),
-    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE', 'PENDING', 'CANCELLED', 'EXPIRED')),
+    subscription_status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE' CHECK (subscription_status IN ('ACTIVE', 'INACTIVE', 'PENDING', 'CANCELLED', 'EXPIRED')),
     payment_method VARCHAR(50) NOT NULL CHECK (payment_method IN ('CREDIT_CARD', 'DEBIT_CARD', 'PAYPAL', 'APPLE_PAY', 'BANK_TRANSFER')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

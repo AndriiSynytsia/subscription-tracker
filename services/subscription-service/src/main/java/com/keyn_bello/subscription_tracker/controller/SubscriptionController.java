@@ -4,6 +4,7 @@ import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionResponseDto;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionUpdateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
+import com.keyn_bello.subscription_tracker.entity.SubscriptionStatus;
 import com.keyn_bello.subscription_tracker.mapper.SubscriptionMapper;
 import com.keyn_bello.subscription_tracker.service.SubscriptionService;
 import jakarta.validation.Valid;
@@ -45,10 +46,12 @@ public class SubscriptionController {
                 .userId(subscriptionDto.userId())
                 .merchantName(subscriptionDto.merchantName())
                 .price(subscriptionDto.price())
+                .currency(subscriptionDto.currency())
                 .billingCycle(subscriptionDto.billingCycle())
                 .nextRenewalDate(subscriptionDto.nextRenewalDate())
                 .notificationInterval(subscriptionDto.notificationInterval())
                 .paymentMethod(subscriptionDto.paymentMethod())
+                .subscriptionStatus(SubscriptionStatus.ACTIVE)
                 .build();
 
         Subscription createdSubscription = subscriptionService.createSubscription(subscription);
@@ -75,12 +78,7 @@ public class SubscriptionController {
      */
     @GetMapping("/me")
     public ResponseEntity<List<SubscriptionResponseDto>> getMySubscriptions(Authentication authentication) {
-        System.out.println("Authentication: " + authentication);
-        System.out.println("Authentication name: " + (authentication != null ? authentication.getName() : "null"));
 
-        if (authentication == null) {
-            throw new RuntimeException("Authentication is null");
-        }
         Long userId = Long.valueOf(authentication.getName());
         var userSubscriptions = subscriptionService.getAllSubscriptionsByUser(userId)
                 .stream()
@@ -109,11 +107,12 @@ public class SubscriptionController {
                 .userId(existingSubscription.get().getUserId())
                 .merchantName(updateDto.merchantName())
                 .price(updateDto.price())
+                .currency(updateDto.currency())
                 .billingCycle(updateDto.billingCycle())
                 .paymentMethod(updateDto.paymentMethod())
                 .nextRenewalDate(updateDto.nextRenewalDate())
                 .notificationInterval(updateDto.notificationInterval())
-                .status(updateDto.status())
+                .subscriptionStatus(updateDto.subscriptionStatus())
                 .currency(updateDto.currency())
                 .build();
         Subscription updatedSubscription = subscriptionService.updateSubscription(subscription);
@@ -128,6 +127,9 @@ public class SubscriptionController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubscription(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Long userId = Long.valueOf(authentication.getName());
         subscriptionService.deleteSubscription(id, userId);
         return ResponseEntity.noContent().build();
