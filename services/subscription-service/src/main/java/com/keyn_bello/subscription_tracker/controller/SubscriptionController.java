@@ -65,9 +65,19 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the retrieved Subscription object and HTTP status code
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Subscription> getSubscriptionById(@PathVariable Long id) {
+    public ResponseEntity<Subscription> getSubscriptionById(@PathVariable Long id, Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
         Optional<Subscription> subscription = subscriptionService.getSubscriptionById(id);
-        return subscription.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+
+        if (subscription.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!subscription.get().getUserId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return ResponseEntity.ok(subscription.get());
     }
 
     /**
@@ -95,11 +105,16 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the updated Subscription object and HTTP status code
      */
     @PutMapping("/{id}")
-    public ResponseEntity<SubscriptionResponseDto> updateSubscription(@PathVariable Long id, @Valid @RequestBody SubscriptionUpdateRequestDto updateDto) {
+    public ResponseEntity<SubscriptionResponseDto> updateSubscription(@PathVariable Long id, @Valid @RequestBody SubscriptionUpdateRequestDto updateDto, Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
         Optional<Subscription> existingSubscription = subscriptionService.getSubscriptionById(id);
 
         if (existingSubscription.isEmpty()) {
             return ResponseEntity.notFound().build();
+        }
+
+        if (!existingSubscription.get().getUserId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         Subscription subscription = Subscription.builder()
@@ -127,10 +142,16 @@ public class SubscriptionController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubscription(@PathVariable Long id, Authentication authentication) {
-        if (authentication == null) {
+        Long userId = Long.valueOf(authentication.getName());
+        Optional<Subscription> existingSubscription = subscriptionService.getSubscriptionById(id);
+
+        if (existingSubscription.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!existingSubscription.get().getUserId().equals(userId)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Long userId = Long.valueOf(authentication.getName());
         subscriptionService.deleteSubscription(id, userId);
         return ResponseEntity.noContent().build();
     }
@@ -143,7 +164,15 @@ public class SubscriptionController {
      */
     @GetMapping("/renewals")
     public ResponseEntity<List<SubscriptionResponseDto>> getUpcomingRenewals(@RequestParam @Min(1) @Max(365) int daysAhead, Authentication authentication) {
-        List<SubscriptionResponseDto> upcomingRenewals = subscriptionService.getUpcomingRenewals(daysAhead)
+        Long userId = Long.valueOf(authentication.getName());
+
+        List<Subscription> existingSubscription = subscriptionService.getAllSubscriptionsByUser(userId);
+
+        if (existingSubscription.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<SubscriptionResponseDto> upcomingRenewals = subscriptionService.getUpcomingRenewals(daysAhead, userId)
                 .stream()
                 .map(subscriptionMapper::toDto)
                 .toList();

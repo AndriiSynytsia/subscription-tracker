@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     }
 
     private static String extractDataIntegrityMessage(DataIntegrityViolationException ex) {
-        Throwable root = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause() : ex;
+        Throwable root = ex.getMostSpecificCause();
         String msg = root.getMessage();
         if (msg == null) return "Data integrity violation";
         String lower = msg.toLowerCase(Locale.ROOT);

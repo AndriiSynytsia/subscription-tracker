@@ -2,9 +2,11 @@ package com.keyn_bello.subscription_tracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keyn_bello.subscription_tracker.dto.SubscriptionCreateRequestDto;
+import com.keyn_bello.subscription_tracker.dto.SubscriptionUpdateRequestDto;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.PaymentMethod;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
+import com.keyn_bello.subscription_tracker.entity.SubscriptionStatus;
 import com.keyn_bello.subscription_tracker.exceptions.DuplicateSubscriptionException;
 import com.keyn_bello.subscription_tracker.exceptions.GlobalExceptionHandler;
 import com.keyn_bello.subscription_tracker.exceptions.SubscriptionNotFoundException;
@@ -66,20 +68,41 @@ class SubscriptionControllerTest {
         @DisplayName("return 200 when update successful")
         void shouldUpdateSubscription_return200() throws Exception {
             //given
-            Subscription existing = Subscription.builder().id(7L).userId(1L).merchantName("Old Name").price(new BigDecimal("9.99")).billingCycle(BillingCycle.MONTHLY).paymentMethod(PaymentMethod.CREDIT_CARD).notificationInterval(7).nextRenewalDate(LocalDate.now().plusDays(30)).build();
+            Subscription existing = Subscription.builder().id(7L).userId(123L).merchantName("Old Name").price(new BigDecimal("9.99")).billingCycle(BillingCycle.MONTHLY).paymentMethod(PaymentMethod.CREDIT_CARD).notificationInterval(7).nextRenewalDate(LocalDate.now().plusDays(30)).build();
 
-            Subscription updated = Subscription.builder().id(7L).userId(1L).merchantName("Youtube").price(new BigDecimal("11.99")).billingCycle(BillingCycle.MONTHLY).paymentMethod(PaymentMethod.CREDIT_CARD).notificationInterval(7).nextRenewalDate(LocalDate.now().plusDays(30)).build();
+            SubscriptionUpdateRequestDto updateDto = new SubscriptionUpdateRequestDto(
+                    "YouTube Premium",
+                    new BigDecimal("11.99"),
+                    BillingCycle.MONTHLY,
+                    LocalDate.now().plusDays(30),
+                    3,
+                    PaymentMethod.CREDIT_CARD,
+                    SubscriptionStatus.ACTIVE,
+                    "USD"
+            );
+
+            Subscription updated = Subscription.builder().id(7L).userId(123L).merchantName("Youtube").price(new BigDecimal("11.99")).billingCycle(BillingCycle.MONTHLY).paymentMethod(PaymentMethod.CREDIT_CARD).notificationInterval(7).nextRenewalDate(LocalDate.now().plusDays(30)).build();
 
             //when
             when(subscriptionService.getSubscriptionById(7L)).thenReturn(Optional.of(existing));
             when(subscriptionService.updateSubscription(any())).thenReturn(updated);
 
             //then
-            mockMvc.perform(put("/api/subscriptions/{id}", 7).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(updated))).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(7L)).andExpect(jsonPath("$.merchantName").value("Youtube")).andExpect(jsonPath("$.price").value(11.99));
+            mockMvc.perform(put("/api/subscriptions/{id}", 7).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(updateDto))).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(7L)).andExpect(jsonPath("$.merchantName").value("Youtube")).andExpect(jsonPath("$.price").value(11.99));
 
             var captor = ArgumentCaptor.forClass(Subscription.class);
             verify(subscriptionService).updateSubscription(captor.capture());
-            assertEquals(7L, captor.getValue().getId());
+
+            Subscription capturedEntity = captor.getValue();
+            assertEquals(7L, capturedEntity.getId());
+            assertEquals(123L, capturedEntity.getUserId());
+            assertEquals(updateDto.merchantName(), capturedEntity.getMerchantName());
+            assertEquals(updateDto.price(), capturedEntity.getPrice());
+            assertEquals(updateDto.billingCycle(), capturedEntity.getBillingCycle());
+            assertEquals(updateDto.paymentMethod(), capturedEntity.getPaymentMethod());
+            assertEquals(updateDto.notificationInterval(), capturedEntity.getNotificationInterval());
+            assertEquals(updateDto.subscriptionStatus(), capturedEntity.getSubscriptionStatus());
+            assertEquals(updateDto.currency(), capturedEntity.getCurrency());
         }
 
         /**
@@ -101,7 +124,7 @@ class SubscriptionControllerTest {
 
     @Nested
     @DisplayName("DELETE /api/subscriptions/{id}")
-    class Delete {
+    class DeleteTestCase {
         /**
          * Test method to verify that a subscription is deleted successfully
          */
@@ -126,9 +149,22 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName("return 404 when subscription not found")
         void shouldReturn404_whenDeleteSubscriptionNotFound() throws Exception {
-            doThrow(new SubscriptionNotFoundException("Subscription not found")).when(subscriptionService).deleteSubscription(1L, 1L);
+            Subscription subscription = Subscription.builder()
+                    .id(1L)
+                    .userId(1L)
+                    .merchantName("Netflix")
+                    .price(new BigDecimal("10.0"))
+                    .build();
 
-            mockMvc.perform(delete("/api/subscriptions/1").with(csrf()).with(user("1")).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isNotFound());
+            when(subscriptionService.getSubscriptionById(1L)).thenReturn(Optional.of(subscription));
+            doThrow(new SubscriptionNotFoundException("Subscription not found"))
+                    .when(subscriptionService).deleteSubscription(1L, 1L);
+
+            mockMvc.perform(delete("/api/subscriptions/1")
+                            .with(csrf())
+                            .with(user("1"))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
 
             verify(subscriptionService).deleteSubscription(1L, 1L);
         }
@@ -136,6 +172,7 @@ class SubscriptionControllerTest {
 
     @Nested
     @DisplayName("GET /api/subscriptions/renewals")
+    @WithMockUser(username = "123")
     class GetRenewals {
 
         @Test
@@ -153,15 +190,16 @@ class SubscriptionControllerTest {
         @DisplayName("return 200 and DTO in response")
         void shouldReturnUpcomingRenewals_return200() throws Exception {
             //given
-            Subscription subscription = Subscription.builder().id(1L).userId(1L).merchantName("Test").price(new BigDecimal("10.0")).build();
+            Subscription subscription = Subscription.builder().id(1L).userId(123L).merchantName("Test").price(new BigDecimal("10.0")).build();
 
             //when
-            when(subscriptionService.getUpcomingRenewals(7)).thenReturn(java.util.List.of(subscription));
+            when(subscriptionService.getAllSubscriptionsByUser(123L)).thenReturn(java.util.List.of(subscription));
+            when(subscriptionService.getUpcomingRenewals(7, 123L)).thenReturn(java.util.List.of(subscription));
 
             //then
             mockMvc.perform(get("/api/subscriptions/renewals?daysAhead=7").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(1L)).andExpect(jsonPath("$[0].merchantName").value("Test"));
 
-            verify(subscriptionService).getUpcomingRenewals(7);
+            verify(subscriptionService).getUpcomingRenewals(7, 123L);
         }
 
         /**
@@ -170,14 +208,14 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName("return 400 when invalid input")
         void shouldReturn400_whenInvalidDaysAhead() throws Exception {
-            when(subscriptionService.getUpcomingRenewals(7)).thenThrow(new IllegalArgumentException("Invalid input"));
-
-            mockMvc.perform(get("/api/subscriptions/renewals?daysAhead=7").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+            mockMvc.perform(get("/api/subscriptions/renewals?daysAhead=0").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isBadRequest());
+            verifyNoInteractions(subscriptionService);
         }
     }
 
     @Nested
     @DisplayName("GET /api/subscriptions/{id}")
+    @WithMockUser(username = "123")
     class GetSubscription {
         /**
          * Test method to verify that a subscription is retrieved successfully
@@ -186,7 +224,7 @@ class SubscriptionControllerTest {
         @DisplayName("return 200 and DTO in response")
         void shouldGetSubscriptionById_return200() throws Exception {
             //given
-            Subscription subscription = Subscription.builder().id(1L).userId(1L).merchantName("Test").price(new BigDecimal("10.0")).build();
+            Subscription subscription = Subscription.builder().id(1L).userId(123L).merchantName("Test").price(new BigDecimal("10.0")).build();
 
             //when
             when(subscriptionService.getSubscriptionById(1L)).thenReturn(Optional.of(subscription));

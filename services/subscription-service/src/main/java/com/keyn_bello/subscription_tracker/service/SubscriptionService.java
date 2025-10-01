@@ -150,7 +150,11 @@ public class SubscriptionService {
      * @param daysAhead - number of days ahead to check for renewals
      * @return - List of subscriptions that are due for renewal in the next x days
      */
-    public List<Subscription> getUpcomingRenewals(int daysAhead) {
+    public List<Subscription> getUpcomingRenewals(int daysAhead, Long userId) {
+        if (subscriptionRepository.findByUserId(userId).isEmpty()) {
+            throw new SubscriptionNotFoundException(userId);
+        }
+
         if (daysAhead < 0) {
             throw new IllegalArgumentException("Days ahead cannot be negative");
         }
