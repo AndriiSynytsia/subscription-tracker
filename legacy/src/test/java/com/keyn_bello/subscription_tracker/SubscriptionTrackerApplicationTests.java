@@ -8,6 +8,7 @@ class SubscriptionTrackerApplicationTests {
 
 	@Test
 	void contextLoads() {
+        // default implementation ignored
 	}
 
 }
