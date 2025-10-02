@@ -81,14 +81,14 @@ class SubscriptionControllerTest {
                     "USD"
             );
 
-            Subscription updated = Subscription.builder().id(7L).userId(123L).merchantName("Youtube").price(new BigDecimal("11.99")).billingCycle(BillingCycle.MONTHLY).paymentMethod(PaymentMethod.CREDIT_CARD).notificationInterval(7).nextRenewalDate(LocalDate.now().plusDays(30)).build();
+            Subscription updated = Subscription.builder().id(7L).userId(123L).merchantName("Youtube Premium").price(new BigDecimal("11.99")).billingCycle(BillingCycle.MONTHLY).paymentMethod(PaymentMethod.CREDIT_CARD).notificationInterval(7).nextRenewalDate(LocalDate.now().plusDays(30)).build();
 
             //when
             when(subscriptionService.getSubscriptionById(7L)).thenReturn(Optional.of(existing));
             when(subscriptionService.updateSubscription(any())).thenReturn(updated);
 
             //then
-            mockMvc.perform(put("/api/subscriptions/{id}", 7).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(updateDto))).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(7L)).andExpect(jsonPath("$.merchantName").value("Youtube")).andExpect(jsonPath("$.price").value(11.99));
+            mockMvc.perform(put("/api/subscriptions/{id}", 7).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(updateDto))).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(7L)).andExpect(jsonPath("$.merchantName").value("Youtube Premium")).andExpect(jsonPath("$.price").value(11.99));
 
             var captor = ArgumentCaptor.forClass(Subscription.class);
             verify(subscriptionService).updateSubscription(captor.capture());
