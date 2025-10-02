@@ -41,9 +41,10 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the created Subscription object and HTTP status code
      */
     @PostMapping
-    public ResponseEntity<Subscription> createSubscription(@Valid @RequestBody SubscriptionCreateRequestDto subscriptionDto) {
+    public ResponseEntity<Subscription> createSubscription(@Valid @RequestBody SubscriptionCreateRequestDto subscriptionDto, Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
         Subscription subscription = Subscription.builder()
-                .userId(subscriptionDto.userId())
+                .userId(userId)
                 .merchantName(subscriptionDto.merchantName())
                 .price(subscriptionDto.price())
                 .currency(subscriptionDto.currency())

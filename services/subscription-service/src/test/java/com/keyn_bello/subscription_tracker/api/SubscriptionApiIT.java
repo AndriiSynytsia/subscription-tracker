@@ -99,7 +99,7 @@ public class SubscriptionApiIT {
         }
 
         @Test
-        @DisplayName("403 FORBIDDEN without token")
+        @DisplayName("401 Unauthorized without token")
         void create_returns401_withoutAuth() {
             var dto = validDto("Netflix", 1L);
             ResponseEntity<String> resp = rest.postForEntity("/api/subscriptions", dto, String.class);

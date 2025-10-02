@@ -271,9 +271,9 @@ class SubscriptionControllerTest {
         @DisplayName("return 201 and maps DTO")
         void shouldCreateSubscription_return201_andMapDto() throws Exception {
             //given
-            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto(1L, "Spotify", new BigDecimal("10.0"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.CREDIT_CARD);
+            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto(123L, "Spotify", new BigDecimal("10.0"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.CREDIT_CARD);
 
-            Subscription createdSubscription = Subscription.builder().id(12L).userId(1L).merchantName(dto.merchantName()).price(dto.price()).billingCycle(BillingCycle.MONTHLY).nextRenewalDate(dto.nextRenewalDate()).notificationInterval(7).paymentMethod(PaymentMethod.CREDIT_CARD).build();
+            Subscription createdSubscription = Subscription.builder().id(12L).userId(123L).merchantName(dto.merchantName()).price(dto.price()).billingCycle(BillingCycle.MONTHLY).nextRenewalDate(dto.nextRenewalDate()).notificationInterval(7).paymentMethod(PaymentMethod.CREDIT_CARD).build();
 
             //when
             when(subscriptionService.createSubscription(any())).thenReturn(createdSubscription);
@@ -285,7 +285,7 @@ class SubscriptionControllerTest {
             verify(subscriptionService).createSubscription(captor.capture());
             var sent = captor.getValue();
 
-            assertEquals(1L, sent.getUserId());
+            assertEquals(123L, sent.getUserId());
             assertEquals("Spotify", sent.getMerchantName());
             assertEquals(new BigDecimal("10.0"), sent.getPrice());
             assertEquals(BillingCycle.MONTHLY, sent.getBillingCycle());
