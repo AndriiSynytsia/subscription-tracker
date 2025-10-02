@@ -128,7 +128,6 @@ public class SubscriptionController {
                 .nextRenewalDate(updateDto.nextRenewalDate())
                 .notificationInterval(updateDto.notificationInterval())
                 .subscriptionStatus(updateDto.subscriptionStatus())
-                .currency(updateDto.currency())
                 .build();
         Subscription updatedSubscription = subscriptionService.updateSubscription(subscription);
         return ResponseEntity.ok(subscriptionMapper.toDto(updatedSubscription));
@@ -150,7 +149,7 @@ public class SubscriptionController {
         }
 
         if (!existingSubscription.get().getUserId().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         subscriptionService.deleteSubscription(id, userId);
         return ResponseEntity.noContent().build();
@@ -165,12 +164,6 @@ public class SubscriptionController {
     @GetMapping("/renewals")
     public ResponseEntity<List<SubscriptionResponseDto>> getUpcomingRenewals(@RequestParam @Min(1) @Max(365) int daysAhead, Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
-
-        List<Subscription> existingSubscription = subscriptionService.getAllSubscriptionsByUser(userId);
-
-        if (existingSubscription.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
 
         List<SubscriptionResponseDto> upcomingRenewals = subscriptionService.getUpcomingRenewals(daysAhead, userId)
                 .stream()

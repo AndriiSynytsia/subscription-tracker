@@ -5,6 +5,7 @@ import com.keyn_bello.subscription_tracker.exceptions.DuplicateSubscriptionExcep
 import com.keyn_bello.subscription_tracker.exceptions.SubscriptionNotFoundException;
 import com.keyn_bello.subscription_tracker.repository.SubscriptionRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -91,7 +92,7 @@ public class SubscriptionService {
                 .currency(subscription.getCurrency() != null ? subscription.getCurrency() : existing.getCurrency())
                 .billingCycle(subscription.getBillingCycle() != null ? subscription.getBillingCycle() : existing.getBillingCycle())
                 .nextRenewalDate(subscription.getNextRenewalDate() != null ? subscription.getNextRenewalDate() : existing.getNextRenewalDate())
-                .notificationInterval(subscription.getNotificationInterval() > 0 ? subscription.getNotificationInterval() : existing.getNotificationInterval())
+                .notificationInterval(subscription.getNotificationInterval() != null ? subscription.getNotificationInterval() : existing.getNotificationInterval())
                 .subscriptionStatus(subscription.getSubscriptionStatus() != null ? subscription.getSubscriptionStatus() : existing.getSubscriptionStatus())
                 .paymentMethod(subscription.getPaymentMethod() != null ? subscription.getPaymentMethod() : existing.getPaymentMethod())
                 .createdAt(existing.getCreatedAt())
@@ -103,14 +104,15 @@ public class SubscriptionService {
                     ERROR_MESSAGE_ALREADY_EXIST.formatted(existing.getUserId(), updatedSubscription.getMerchantName()));
         }
 
-        return saveSubscriptionWithErrorHandling(updatedSubscription, existing.getUserId(), existing.getMerchantName());
+        return saveSubscriptionWithErrorHandling(updatedSubscription, existing.getUserId(), updatedSubscription.getMerchantName());
     }
 
     private Subscription saveSubscriptionWithErrorHandling(Subscription subscription, Long userId, String merchantName) {
         try {
             return subscriptionRepository.save(subscription);
         } catch (DataIntegrityViolationException e) {
-            if (e.getMessage().contains("duplicate key value")) {
+            var cause = e.getCause();
+            if (cause instanceof ConstraintViolationException || (cause != null && cause.getMessage() != null && cause.getMessage().toLowerCase().contains("unique"))) {
                 throw new DuplicateSubscriptionException(ERROR_MESSAGE_ALREADY_EXIST.formatted(userId, merchantName));
             }
             throw e;
@@ -134,14 +136,7 @@ public class SubscriptionService {
         if (!subscription.getUserId().equals(userId)) {
             throw new SubscriptionNotFoundException("Access denied: You can only delete your own subscription");
         }
-        try {
-            subscriptionRepository.deleteById(id);
-        } catch (DataIntegrityViolationException e) {
-            if (e.getMessage().contains("duplicate key value")) {
-                throw new DuplicateSubscriptionException("Subscription already exists for this merchant");
-            }
-            throw e;
-        }
+        subscriptionRepository.deleteById(id);
     }
 
     /**
@@ -151,14 +146,10 @@ public class SubscriptionService {
      * @return - List of subscriptions that are due for renewal in the next x days
      */
     public List<Subscription> getUpcomingRenewals(int daysAhead, Long userId) {
-        if (subscriptionRepository.findByUserId(userId).isEmpty()) {
-            throw new SubscriptionNotFoundException(userId);
-        }
-
         if (daysAhead < 0) {
             throw new IllegalArgumentException("Days ahead cannot be negative");
         }
         LocalDate cutOffDate = LocalDate.now().plusDays(daysAhead);
-        return subscriptionRepository.findByNextRenewalDateBefore(cutOffDate);
+        return subscriptionRepository.findByUserIdAndNextRenewalDateBefore(userId, cutOffDate);
     }
 }

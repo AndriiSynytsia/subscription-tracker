@@ -99,7 +99,7 @@ public class SubscriptionApiIT {
         }
 
         @Test
-        @DisplayName("401 Unauthorized without token")
+        @DisplayName("403 FORBIDDEN without token")
         void create_returns401_withoutAuth() {
             var dto = validDto("Netflix", 1L);
             ResponseEntity<String> resp = rest.postForEntity("/api/subscriptions", dto, String.class);
@@ -175,13 +175,14 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("403 Forbidden when accessing other user's subscription")
         void get_returns403_wrongUser() {
+            var headersUser = createAuthHeaders(1L);
             var headers = createAuthHeaders(2L); // Different user
             var created = rest.exchange("/api/subscriptions",
                     HttpMethod.POST,
-                    new HttpEntity<>(validDto("Netflix", 1L), headers),
+                    new HttpEntity<>(validDto("Netflix", 1L), headersUser),
                     Subscription.class).getBody();
 
-            ResponseEntity<String> resp = rest.exchange("/api/subscriptions/" + created.getId(),
+            ResponseEntity<String> resp = rest.exchange("/api/subscriptions/" + (created != null ? created.getId() : null),
                     HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);

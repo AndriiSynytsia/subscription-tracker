@@ -52,7 +52,7 @@ public class Subscription {
     // notificationInterval could be replaced later with Notification Service instance
     @Positive
     @Column(name = "notification_interval")
-    private int notificationInterval;
+    private Integer notificationInterval;
 
     @NotNull
     @Builder.Default

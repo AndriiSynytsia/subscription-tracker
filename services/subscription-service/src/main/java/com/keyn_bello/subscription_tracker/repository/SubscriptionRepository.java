@@ -11,7 +11,7 @@ import java.util.List;
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
     List<Subscription> findByUserId(@NotNull Long userId);
 
-    List<Subscription> findByNextRenewalDateBefore(@NotNull LocalDate cutOffDate);
+    List<Subscription> findByUserIdAndNextRenewalDateBefore(@NotNull Long userId, @NotNull LocalDate cutOffDate);
 
     List<Subscription> findByUserIdAndMerchantName(@NotNull Long userId, @NotBlank String merchantName);
 
