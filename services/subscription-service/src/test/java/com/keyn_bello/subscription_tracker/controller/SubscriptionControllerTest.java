@@ -112,13 +112,21 @@ class SubscriptionControllerTest {
         @DisplayName("return 404 when subscription not found")
         void shouldReturn404_whenUpdateSubscriptionNotFound() throws Exception {
             //given
-            Subscription subscription = Subscription.builder().id(1L).userId(1L).merchantName("Test").price(new BigDecimal("10.0")).billingCycle(BillingCycle.MONTHLY).paymentMethod(PaymentMethod.CREDIT_CARD).notificationInterval(7).nextRenewalDate(LocalDate.now().plusDays(30)).build();
+            SubscriptionUpdateRequestDto updateDto = new SubscriptionUpdateRequestDto(
+                    "Test",
+                    new BigDecimal("10.0"),
+                    BillingCycle.MONTHLY,
+                    LocalDate.now().plusDays(30),
+                    7,
+                    PaymentMethod.CREDIT_CARD,
+                    SubscriptionStatus.ACTIVE,
+                    "USD");
 
             //when
             when(subscriptionService.updateSubscription(any())).thenThrow(new SubscriptionNotFoundException("Subscription not found"));
 
             //then
-            mockMvc.perform(put("/api/subscriptions/1").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(subscription))).andExpect(status().isNotFound());
+            mockMvc.perform(put("/api/subscriptions/1").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(updateDto))).andExpect(status().isNotFound());
         }
     }
 

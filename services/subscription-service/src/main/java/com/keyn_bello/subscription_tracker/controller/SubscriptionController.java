@@ -41,7 +41,7 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the created Subscription object and HTTP status code
      */
     @PostMapping
-    public ResponseEntity<Subscription> createSubscription(@Valid @RequestBody SubscriptionCreateRequestDto subscriptionDto, Authentication authentication) {
+    public ResponseEntity<SubscriptionResponseDto> createSubscription(@Valid @RequestBody SubscriptionCreateRequestDto subscriptionDto, Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         Subscription subscription = Subscription.builder()
                 .userId(userId)
@@ -56,7 +56,7 @@ public class SubscriptionController {
                 .build();
 
         Subscription createdSubscription = subscriptionService.createSubscription(subscription);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSubscription);
+        return ResponseEntity.status(HttpStatus.CREATED).body(subscriptionMapper.toDto(createdSubscription));
     }
 
     /**
@@ -66,7 +66,7 @@ public class SubscriptionController {
      * @return - ResponseEntity containing the retrieved Subscription object and HTTP status code
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Subscription> getSubscriptionById(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<SubscriptionResponseDto> getSubscriptionById(@PathVariable Long id, Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         Optional<Subscription> subscription = subscriptionService.getSubscriptionById(id);
 
@@ -78,7 +78,7 @@ public class SubscriptionController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        return ResponseEntity.ok(subscription.get());
+        return ResponseEntity.ok(subscriptionMapper.toDto(subscription.get()));
     }
 
     /**
