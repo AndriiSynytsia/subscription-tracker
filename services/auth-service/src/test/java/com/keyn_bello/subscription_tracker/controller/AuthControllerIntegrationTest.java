@@ -47,7 +47,7 @@ class AuthControllerIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("jwt-secret", () -> "test-secret-key-for-integration-tests-32-chars");
+        registry.add("jwt.secret", () -> "0123456789ABCDEF0123456789ABCDEF");
     }
 
     @BeforeEach

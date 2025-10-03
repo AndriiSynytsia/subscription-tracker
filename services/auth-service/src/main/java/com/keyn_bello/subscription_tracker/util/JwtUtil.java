@@ -1,6 +1,7 @@
 package com.keyn_bello.subscription_tracker.util;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -23,12 +24,16 @@ public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String jwtSecret;
-
+    private JwtParser jwtParser;
     private SecretKey secretKey;
 
     @PostConstruct
     private void initSecretKey() {
+        if (jwtSecret == null || jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("Property 'jwt.secret' must be at least 256 bits (32 bytes) for HS256.");
+        }
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.jwtParser = Jwts.parser().verifyWith(secretKey).build();
     }
 
     public String generateToken(String email, Long userId) {
@@ -71,10 +76,6 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        return jwtParser.parseSignedClaims(token).getPayload();
     }
 }
