@@ -1,8 +1,8 @@
-../../Downloads/subscription-tracker/subscription-tracker/HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*.log
 
 ### STS ###
 .apt_generated
