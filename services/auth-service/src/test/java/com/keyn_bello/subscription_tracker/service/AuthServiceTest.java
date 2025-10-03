@@ -162,7 +162,7 @@ class AuthServiceTest {
             //When & Then
             assertThatThrownBy(() -> authService.login(request))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessage("Account is deactivated");
+                    .hasMessage("Invalid credentials");
 
             verify(jwtUtil, never()).generateToken(any(), any());
         }

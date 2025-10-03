@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-public class AuthControllerIntegrationTest {
+class AuthControllerIntegrationTest {
 
     @Container
     @SuppressWarnings("resource")
