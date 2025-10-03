@@ -4,6 +4,7 @@ import com.keyn_bello.subscription_tracker.dto.AuthResponse;
 import com.keyn_bello.subscription_tracker.dto.LoginRequest;
 import com.keyn_bello.subscription_tracker.dto.RegisterRequest;
 import com.keyn_bello.subscription_tracker.entity.User;
+import com.keyn_bello.subscription_tracker.exceptions.InvalidCredentialsException;
 import com.keyn_bello.subscription_tracker.exceptions.UserRegistrationException;
 import com.keyn_bello.subscription_tracker.repository.UserRepository;
 import com.keyn_bello.subscription_tracker.util.JwtUtil;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link AuthService}.
- * Test cover user registration and login functionality including all scenario
+ * Test cover user registration and login functionality including all scenarios
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService Tests")
@@ -103,7 +104,7 @@ class AuthServiceTest {
 
             //When & Then
             assertThatThrownBy(() -> authService.login(request))
-                    .isInstanceOf(RuntimeException.class)
+                    .isInstanceOf(InvalidCredentialsException.class)
                     .hasMessage("Invalid credentials");
 
             verify(passwordEncoder, never()).matches(any(), any());
@@ -132,7 +133,7 @@ class AuthServiceTest {
 
             //When & Then
             assertThatThrownBy(() -> authService.login(request))
-                    .isInstanceOf(RuntimeException.class)
+                    .isInstanceOf(InvalidCredentialsException.class)
                     .hasMessage("Invalid credentials");
 
             verify(jwtUtil, never()).generateToken(any(), any());
@@ -161,37 +162,11 @@ class AuthServiceTest {
 
             //When & Then
             assertThatThrownBy(() -> authService.login(request))
-                    .isInstanceOf(RuntimeException.class)
+                    .isInstanceOf(InvalidCredentialsException.class)
                     .hasMessage("Invalid credentials");
 
             verify(jwtUtil, never()).generateToken(any(), any());
         }
-
-        /**
-         * Test case to verify exception handling when database error occurs during registration.
-         * Mocks the necessary dependencies and verifies the expected behavior.
-         */
-        @Test
-        @DisplayName("Should throw UserRegistrationException when database error occurs")
-        void shouldThrowExceptionWhenDatabaseErrorOccurs() {
-            //Given
-            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
-            when(userRepository.existsByEmail(request.email())).thenReturn(false);
-            when(passwordEncoder.encode(request.password())).thenReturn("hashedPassword");
-            when(userRepository.save(any(User.class))).thenThrow(new org.springframework.dao.DataIntegrityViolationException("Database constraint violation"));
-
-            //When & Then
-            assertThatThrownBy(() -> authService.register(request))
-                    .isInstanceOf(UserRegistrationException.class)
-                    .hasMessage("Registration failed due to database error")
-                    .hasCauseInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
-
-            verify(userRepository).existsByEmail(request.email());
-            verify(passwordEncoder).encode(request.password());
-            verify(userRepository).save(any(User.class));
-            verify(jwtUtil, never()).generateToken(any(), any());
-        }
-
     }
 
     /**
@@ -242,6 +217,31 @@ class AuthServiceTest {
         }
 
         /**
+         * Test case to verify exception handling when database error occurs during registration.
+         * Mocks the necessary dependencies and verifies the expected behavior.
+         */
+        @Test
+        @DisplayName("Should throw UserRegistrationException when database error occurs")
+        void shouldThrowExceptionWhenDatabaseErrorOccurs() {
+            //Given
+            RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
+            when(userRepository.existsByEmail(request.email())).thenReturn(false);
+            when(passwordEncoder.encode(request.password())).thenReturn("hashedPassword");
+            when(userRepository.save(any(User.class))).thenThrow(new org.springframework.dao.DataIntegrityViolationException("Database constraint violation"));
+
+            //When & Then
+            assertThatThrownBy(() -> authService.register(request))
+                    .isInstanceOf(UserRegistrationException.class)
+                    .hasMessage("Registration failed due to database error")
+                    .hasCauseInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+
+            verify(userRepository).existsByEmail(request.email());
+            verify(passwordEncoder).encode(request.password());
+            verify(userRepository).save(any(User.class));
+            verify(jwtUtil, never()).generateToken(any(), any());
+        }
+
+        /**
          * Test case to verify exception handling when email already exists.
          * Mocks the necessary dependencies and verifies the expected behavior.
          */
@@ -272,13 +272,13 @@ class AuthServiceTest {
             //Given
             RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
             when(userRepository.existsByEmail(request.email())).thenReturn(false);
-            when(passwordEncoder.encode(request.password())).thenThrow(new UserRegistrationException("Encoding failed", new RuntimeException()));
+            when(passwordEncoder.encode(request.password())).thenThrow(new UserRegistrationException("Encoding failed", new InvalidCredentialsException("Invalid credentials")));
 
             //When & Then
             assertThatThrownBy(() -> authService.register(request))
                     .isInstanceOf(UserRegistrationException.class)
                     .hasMessage("Encoding failed")
-                    .hasCauseInstanceOf(RuntimeException.class);
+                    .hasCauseInstanceOf(InvalidCredentialsException.class);
         }
 
         /**
@@ -292,13 +292,13 @@ class AuthServiceTest {
             RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123!", "John", "Doe");
             when(userRepository.existsByEmail(request.email())).thenReturn(false);
             when(passwordEncoder.encode(request.password())).thenReturn("hashedPassword");
-            when(userRepository.save(any(User.class))).thenThrow(new UserRegistrationException("Saving failed", new RuntimeException()));
+            when(userRepository.save(any(User.class))).thenThrow(new UserRegistrationException("Saving failed", new InvalidCredentialsException("Invalid credentials")));
 
             //When & Then
             assertThatThrownBy(() -> authService.register(request))
                     .isInstanceOf(UserRegistrationException.class)
                     .hasMessage("Saving failed")
-                    .hasCauseInstanceOf(RuntimeException.class);
+                    .hasCauseInstanceOf(InvalidCredentialsException.class);
         }
 
         /**
@@ -319,13 +319,13 @@ class AuthServiceTest {
             when(userRepository.existsByEmail(request.email())).thenReturn(false);
             when(passwordEncoder.encode(request.password())).thenReturn("hashedPassword");
             when(userRepository.save(any(User.class))).thenReturn(savedUser);
-            when(jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId())).thenThrow(new UserRegistrationException("JWT error", new RuntimeException()));
+            when(jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId())).thenThrow(new UserRegistrationException("JWT error", new InvalidCredentialsException("Invalid credentials")));
 
             //When & Then
             assertThatThrownBy(() -> authService.register(request))
                     .isInstanceOf(UserRegistrationException.class)
                     .hasMessage("JWT error")
-                    .hasCauseInstanceOf(RuntimeException.class);
+                    .hasCauseInstanceOf(InvalidCredentialsException.class);
         }
     }
 }
