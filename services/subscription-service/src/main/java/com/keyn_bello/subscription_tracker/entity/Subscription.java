@@ -1,0 +1,85 @@
+package com.keyn_bello.subscription_tracker.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "subscriptions")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+public class Subscription {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @NotBlank
+    @NotNull
+    @Column(name = "merchant_name", nullable = false, length = 128)
+    private String merchantName;
+
+    @Positive
+    private BigDecimal price;
+
+    @Builder.Default
+    private String currency = "USD";
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_cycle", nullable = false)
+    private BillingCycle billingCycle;
+
+    @FutureOrPresent
+    @Column(name = "next_renewal_date")
+    private LocalDate nextRenewalDate;
+
+    // notificationInterval could be replaced later with Notification Service instance
+    @Positive
+    @Column(name = "notification_interval")
+    private Integer notificationInterval;
+
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subscription_status", nullable = false)
+    private SubscriptionStatus subscriptionStatus = SubscriptionStatus.ACTIVE;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+}
