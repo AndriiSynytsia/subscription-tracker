@@ -55,6 +55,7 @@ public class AuthService {
 
     @Timed(description = "Time taken to login a user", value = "auth_service_login_time", extraTags = {"version", "1.0"})
     public AuthResponse login(LoginRequest request) {
+        final String email = request.email().trim().toLowerCase();
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
@@ -63,10 +64,10 @@ public class AuthService {
         }
 
         if (!user.isActive()) {
-            throw new InvalidCredentialsException("Account is deactivated");
+            throw new InvalidCredentialsException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getId());
+        String token = jwtUtil.generateToken(email, user.getId());
         return AuthResponse.from(token, user);
     }
 }
