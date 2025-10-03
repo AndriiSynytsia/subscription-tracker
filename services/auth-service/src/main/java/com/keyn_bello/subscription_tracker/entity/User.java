@@ -1,6 +1,7 @@
 package com.keyn_bello.subscription_tracker.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -26,12 +27,11 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotNull
+    @Email
     @Column(name = "email", nullable = false)
     private String email;
     @NotNull
     @Size(min = 8, max = 100, message = "Password must be between 8 or 100 symbols")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$",
-            message = "Password must contain at least one lowercase, one uppercase, one digit and one special character")
     @Column(name = "password", nullable = false)
     private String password;
     @NotNull
@@ -42,6 +42,7 @@ public class User implements UserDetails {
     @NotNull
     @Pattern(regexp = "^[A-Z][a-z]*$",
             message = "Last name must start with capital letter and contain only letters")
+    @Column(name = "last_name", nullable = false)
     private String lastName;
     @Column(name = "profile_image_link")
     private String profileImageLink;

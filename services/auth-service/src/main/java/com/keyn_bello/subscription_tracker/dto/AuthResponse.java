@@ -10,6 +10,9 @@ public record AuthResponse(
         UserInfo user
 ) {
     public static AuthResponse from(String token, User user) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token cannot be null or empty");
+        }
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
