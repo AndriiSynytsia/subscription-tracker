@@ -1,18 +1,38 @@
 server:
-  port: 8083
+  port: 8080
+
 spring:
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
   application:
     name: api-gateway-service
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/subscription-tracker
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:password}
-    hikari:
-      maximum-pool-size: 100
-      minimum-idle: 2
-      connection-timeout: 20000
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StipPrefix=1
+
+        - id: subscription-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/subscriptions/**
+          filters:
+              - StripPrefix=1
+              - name: AuthenticationFilter
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+jwt:
+  secret: ${JWT_SECRET}
