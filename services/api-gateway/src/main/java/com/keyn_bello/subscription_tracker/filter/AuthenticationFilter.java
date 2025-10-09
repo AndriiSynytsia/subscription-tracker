@@ -1,10 +1,11 @@
 package com.keyn_bello.subscription_tracker.filter;
 
-import com.keyn_bello.subscription_tracker.uitl.JwtUtil;
+import com.keyn_bello.subscription_tracker.util.JwtUtil;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -24,7 +25,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         return (exchange, chain) -> {
             String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-            if (authHeader == null || authHeader.startsWith("Bearer ")) {
+            if (authHeader == null || !authHeader.startsWith("Bearer ") || authHeader.length() <= 7) {
                 return onError(exchange);
             }
 
@@ -35,11 +36,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             }
 
             String username = jwtUtil.extractUsername(token);
-            exchange.getRequest().mutate()
+            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                     .header("X-User-Id", username)
                     .build();
 
-            return chain.filter(exchange);
+            ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();
+            return chain.filter(mutatedExchange);
         };
     }
 
