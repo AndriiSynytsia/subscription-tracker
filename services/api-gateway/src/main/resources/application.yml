@@ -1,11 +1,19 @@
 server:
   port: 8088
+  error:
+    include-message: never
+    include-binding-errors: never
 
 spring:
   application:
     name: api-gateway-service
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       routes:
         - id: auth-service
           uri: http://localhost:8081
@@ -25,7 +33,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:3000"
+            allowedOrigins: "${ALLOWED_ORIGINS}:http://localhost:3000"
             allowedMethods:
               - GET
               - POST
@@ -34,5 +42,20 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
             allowCredentials: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
 jwt:
   secret: ${JWT_SECRET}
+
+logging:
+  level:
+    com.keyn_bello.subscription_tracker: INFO
+    org.springframework.cloud.gateway: DEBUG
