@@ -18,13 +18,24 @@ import java.nio.charset.StandardCharsets;
 public class JwtUtil {
 
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
+    private static final int MIN_SECRET_LENGTH = 64;
     @Value("${jwt.secret}")
     private String secret;
 
+    private SecretKey signingKey;
+
     @PostConstruct
     public void init() {
-        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 64) {
-            throw new IllegalArgumentException("JWT secret must be at least 64 bytes for HS512");
+        validateSecret();
+        this.signingKey = getSigningKey();
+    }
+
+    private void validateSecret() {
+        if (secret == null || secret.trim().isEmpty()) {
+            throw new IllegalArgumentException("JWT secret cannot be null or empty");
+        }
+        if (secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_LENGTH) {
+            throw new IllegalArgumentException("JWT secret must be at least " + MIN_SECRET_LENGTH + " bytes for HS512");
         }
     }
 
@@ -34,17 +45,35 @@ public class JwtUtil {
 
     public Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
 
     public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+        if (token == null || token.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return extractAllClaims(token).getSubject();
+        } catch (Exception e) {
+            log.warn("Failed to extract username from token: {}", e.getMessage());
+            return null;
+        }
     }
 
     public boolean isTokenValid(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return false;
+        }
+
+        if (token.split("\\.").length != 3) {
+            log.debug("Invalid JWT format - expected 3 parts separated by dots, got: {}", token.split("\\.").length);
+            return false;
+        }
+
         try {
             extractAllClaims(token);
             return true;
@@ -57,8 +86,11 @@ public class JwtUtil {
         } catch (MalformedJwtException e) {
             log.debug("Malformed token: {}", e.getMessage());
             return false;
+        } catch (IllegalArgumentException e) {
+            log.debug("Invalid token format: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
-            log.error("Unexpected error validating token", e);
+            log.error("Unexpected error validating token: {}", e.getMessage());
             return false;
         }
     }
