@@ -33,30 +33,21 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
             String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-            if (authHeader == null) {
-                log.debug("No Authorization header found");
-                return onError(exchange);
-            }
-
-            if (!authHeader.startsWith("Bearer ")) {
-                log.debug("Authorization header doesn't start with 'Bearer ': {}", authHeader);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                log.debug("Invalid or missing Authorization header");
                 return onError(exchange);
             }
 
             String token = authHeader.substring(7).trim();
-            log.debug("Extracted token: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
 
-            if (token.isEmpty() || !token.contains(".")) {
-                log.warn("Invalid token format - missing periods: {}", token);
-                return onError(exchange);
-            }
-
-            if (!jwtUtil.isTokenValid(token)) {
+            if (token.isEmpty() || !jwtUtil.isTokenValid(token)) {
+                log.debug("Invalid token provided");
                 return onError(exchange);
             }
 
             String username = jwtUtil.extractUsername(token);
             if (username == null) {
+                log.debug("Unable to extract username from token");
                 return onError(exchange);
             }
 
