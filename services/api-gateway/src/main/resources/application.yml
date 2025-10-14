@@ -3,6 +3,7 @@ server:
   error:
     include-message: never
     include-binding-errors: never
+    include-stacktrace: never
 
 spring:
   application:
@@ -16,14 +17,14 @@ spring:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       routes:
         - id: auth-service
-          uri: http://localhost:8081
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/auth/**
           filters:
             - StripPrefix=1
 
         - id: subscription-service
-          uri: http://localhost:8086
+          uri: ${SUBSCRIPTION_SERVICE_URL:http://localhost:8086}
           predicates:
             - Path=/api/subscriptions/**
           filters:
@@ -33,7 +34,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "${ALLOWED_ORIGINS}:http://localhost:3000"
+            allowedOrigins: "${ALLOWED_ORIGINS:http://localhost:3000}"
             allowedMethods:
               - GET
               - POST
@@ -47,7 +48,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
   endpoint:
     health:
       show-details: when-authorized
@@ -58,4 +59,5 @@ jwt:
 logging:
   level:
     com.keyn_bello.subscription_tracker: INFO
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway: WARN
+    org.springframework.security: WARN
