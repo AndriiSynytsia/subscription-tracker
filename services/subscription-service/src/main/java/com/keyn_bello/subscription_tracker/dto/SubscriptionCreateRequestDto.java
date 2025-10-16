@@ -8,6 +8,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record SubscriptionCreateRequestDto(
+        @NotNull(message = "User ID is required")
+        Long userId,
+
         @NotBlank(message = "Merchant name is required")
         @Size(max = 100, message = "Merchant name must not exceed 100 characters")
         String merchantName,
