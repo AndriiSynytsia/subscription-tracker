@@ -279,7 +279,7 @@ class SubscriptionControllerTest {
         @DisplayName("return 201 and maps DTO")
         void shouldCreateSubscription_return201_andMapDto() throws Exception {
             //given
-            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto( "Spotify", new BigDecimal("10.0"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.CREDIT_CARD);
+            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto( 123L,"Spotify", new BigDecimal("10.0"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.CREDIT_CARD);
 
             Subscription createdSubscription = Subscription.builder().id(12L).userId(123L).merchantName(dto.merchantName()).price(dto.price()).billingCycle(BillingCycle.MONTHLY).nextRenewalDate(dto.nextRenewalDate()).notificationInterval(7).paymentMethod(PaymentMethod.CREDIT_CARD).build();
 
@@ -308,7 +308,7 @@ class SubscriptionControllerTest {
         @Test
         @DisplayName("return 400 when invalid input")
         void shouldReturn400_whenInvalidInput() throws Exception {
-            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto( " ", new BigDecimal("10.0"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.APPLE_PAY);
+            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto( 123L," ", new BigDecimal("10.0"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.APPLE_PAY);
 
             mockMvc.perform(post("/api/subscriptions").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(dto))).andExpect(status().isBadRequest());
 
@@ -322,7 +322,7 @@ class SubscriptionControllerTest {
         @DisplayName("return 409 when duplicate subscription")
         void shouldReturn409_whenDuplicateSubscription() throws Exception {
             // given
-            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto( "Netflix", new BigDecimal("15.99"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.CREDIT_CARD);
+            SubscriptionCreateRequestDto dto = new SubscriptionCreateRequestDto( 123L, "Netflix", new BigDecimal("15.99"), "USD", BillingCycle.MONTHLY, LocalDate.now().plusDays(30), 7, PaymentMethod.CREDIT_CARD);
 
             when(subscriptionService.createSubscription(any())).thenThrow(new DuplicateSubscriptionException("Duplicate subscription"));
 
