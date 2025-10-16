@@ -388,8 +388,8 @@ public class SubscriptionApiIT {
     class JwtProductionTests {
 
         @Test
-        @DisplayName("Token expires after configured time")
-        void tokenExpiration_worksCorrectly() {
+        @DisplayName("Valid token allows access")
+        void validToken_allowsAccess() {
             String shortToken = jwtUtil.generateToken("1");
 
             HttpHeaders headers = new HttpHeaders();
