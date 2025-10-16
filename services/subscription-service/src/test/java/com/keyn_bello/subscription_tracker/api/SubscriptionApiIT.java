@@ -110,8 +110,8 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("400 Bad Request on bean validation failure (blank merchant)")
         void create_returns400_onInvalidDto() {
-            var dto = new SubscriptionCreateRequestDto(
-                    1L, "  ", new BigDecimal("10.00"), "USD",
+            var dto = new SubscriptionCreateRequestDto(123L,
+                    "  ", new BigDecimal("10.00"), "USD",
                     BillingCycle.MONTHLY, LocalDate.now().plusDays(30),
                     7, PaymentMethod.CREDIT_CARD
             );
@@ -139,7 +139,7 @@ public class SubscriptionApiIT {
         @DisplayName("200 OK when found")
         void get_found_returns200() {
             var dto = new SubscriptionCreateRequestDto(
-                    1L,
+                    123L,
                     "Spotify",
                     BigDecimal.valueOf(11.99),
                     "USD",
