@@ -1,0 +1,2 @@
+jwt:
+  secret: test-secret-key-for-testing-purposes-only-minimum-256-bits-required
