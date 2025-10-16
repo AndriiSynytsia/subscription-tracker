@@ -224,7 +224,7 @@ public class SubscriptionApiIT {
                     Subscription.class);
 
             ResponseEntity<List<SubscriptionResponseDto>> resp =
-                    rest.exchange("/api/subscriptions/me", HttpMethod.GET, new HttpEntity<>(headers), new ParameterizedTypeReference<List<SubscriptionResponseDto>>() {
+                    rest.exchange("/api/subscriptions/me", HttpMethod.GET, new HttpEntity<>(headers), new ParameterizedTypeReference<>() {
                     });
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -360,7 +360,7 @@ public class SubscriptionApiIT {
                     rest.exchange("/api/subscriptions/renewals?daysAhead=10",
                             HttpMethod.GET,
                             new HttpEntity<>(headers),
-                            new ParameterizedTypeReference<List<SubscriptionResponseDto>>() {
+                            new ParameterizedTypeReference<>() {
                             });
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
