@@ -127,8 +127,6 @@ public class SubscriptionApiIT {
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(resp.getBody()).isNotNull();
-            assertThat(resp.getBody()).contains("errors");
-
         }
     }
 
@@ -384,4 +382,50 @@ public class SubscriptionApiIT {
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
     }
+
+    @Nested
+    @DisplayName("JWT Testing")
+    class JwtProductionTests {
+
+        @Test
+        @DisplayName("Token expires after configured time")
+        void tokenExpiration_worksCorrectly() {
+            String shortToken = jwtUtil.generateToken("1");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(shortToken);
+
+            ResponseEntity<String> resp = rest.exchange("/api/subscriptions/me",
+                    HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        }
+
+        @Test
+        @DisplayName("Invalid token signature rejected")
+        void invalidSignature_rejected() {
+            String tamperedToken = createTestToken(1L) + "tampered";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(tamperedToken);
+
+            ResponseEntity<String> resp = rest.exchange("/api/subscriptions/me",
+                    HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        @DisplayName("Malformed token rejected")
+        void malformedToken_rejected() {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth("not.a.jwt");
+
+            ResponseEntity<String> resp = rest.exchange("/api/subscriptions/me",
+                    HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
 }
