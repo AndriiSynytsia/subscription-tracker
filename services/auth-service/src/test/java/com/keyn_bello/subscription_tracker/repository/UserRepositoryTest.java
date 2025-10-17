@@ -1,6 +1,8 @@
 package com.keyn_bello.subscription_tracker.repository;
 
 import com.keyn_bello.subscription_tracker.entity.User;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,11 +17,12 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@Transactional
 @Testcontainers
 class UserRepositoryTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16.3")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test");
@@ -32,6 +35,11 @@ class UserRepositoryTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("jwt.secret", () -> "0123456789ABCDEF0123456789ABCDEF");
+    }
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
     }
 
     @Test
