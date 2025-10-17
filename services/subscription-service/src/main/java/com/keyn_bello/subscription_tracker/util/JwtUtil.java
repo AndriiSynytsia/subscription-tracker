@@ -47,12 +47,13 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    public String generateToken(String userId) {
+    public String generateToken(String email, Long userId) {
         Date now = new Date();
         long ttlMillis = TimeUnit.HOURS.toMillis(1);
         return Jwts.builder()
-                .subject(userId)
-                .claim("userId", Long.valueOf(userId))
+                .subject(email)
+                .claim("email", email)
+                .claim("userId", userId)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + ttlMillis))
                 .signWith(secretKey)

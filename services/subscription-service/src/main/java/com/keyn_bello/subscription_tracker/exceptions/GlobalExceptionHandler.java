@@ -12,10 +12,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 @RestControllerAdvice
 @Slf4j
@@ -51,17 +53,15 @@ public class GlobalExceptionHandler {
      * @return - HTTP response with error details
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception) {
-        Map<String, Object> body = new HashMap<>();
-        body.put(MESSAGE_KEY, "Validation failed");
-        body.put("errors", exception.getBindingResult().getFieldErrors().stream()
-                .map(fe -> {
-                    if (fe.getDefaultMessage() == null) {
-                        log.warn("Field error has null default message for field: {}", fe.getField());
-                    }
-                    return Map.of(FIELD_KEY, fe.getField(), MESSAGE_KEY, fe.getDefaultMessage());
-                }).toList());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        exception.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage()));
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("VALIDATION_FAILED",
+                        HttpStatus.BAD_REQUEST.value(),
+                        LocalDateTime.now(),
+                        request.getRequestURI()));
     }
 
     @ExceptionHandler(BindException.class)
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
                         FIELD_KEY, fe.getField(),
                         MESSAGE_KEY, fe.getDefaultMessage() != null ?
                                 fe.getDefaultMessage() :
-                                fe.getCode()))
+                                Objects.requireNonNull(fe.getCode())))
                 .toList());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
@@ -119,8 +119,30 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException exception, HttpServletRequest request) {
-        ErrorResponse errorResponse = getErrorResponse(exception, request, HttpStatus.BAD_REQUEST);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("INVALID_INPUT",
+                        HttpStatus.BAD_REQUEST.value(),
+                        LocalDateTime.now(),
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException exception, HttpServletRequest request) {
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("ACCESS_DENIED",
+                        HttpStatus.FORBIDDEN.value(),
+                        LocalDateTime.now(),
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception exception) {
+        log.error("Unexpected error: ", exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("INTERNAL_SERVER_ERROR",
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        LocalDateTime.now(),
+                        "An unexpected error occurred"));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
