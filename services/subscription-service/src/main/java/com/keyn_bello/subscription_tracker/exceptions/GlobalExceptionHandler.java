@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
      * @return - HTTP response with error details
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
         Map<String, String> errors = new HashMap<>();
         exception.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage()));
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("VALIDATION_FAILED",
                         HttpStatus.BAD_REQUEST.value(),
                         LocalDateTime.now(),
-                        errors.toString()));
+                        request.getRequestURI()));
     }
 
     @ExceptionHandler(BindException.class)
@@ -123,16 +123,16 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("INVALID_INPUT",
                         HttpStatus.BAD_REQUEST.value(),
                         LocalDateTime.now(),
-                        "Invalid request parameters"));
+                        request.getRequestURI()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException exception, HttpServletRequest request) {
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse("ACCESS_DENIED",
-                        HttpStatus.BAD_REQUEST.value(),
+                        HttpStatus.FORBIDDEN.value(),
                         LocalDateTime.now(),
-                        "Access denied"));
+                        request.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)
