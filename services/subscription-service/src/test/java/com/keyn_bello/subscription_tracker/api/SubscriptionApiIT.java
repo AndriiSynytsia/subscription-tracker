@@ -51,8 +51,8 @@ public class SubscriptionApiIT {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private String createTestToken(Long userId) {
-        return jwtUtil.generateToken(userId.toString());
+    private String createTestToken(String email, Long userId) {
+        return jwtUtil.generateToken(email, userId);
     }
 
 
@@ -69,10 +69,10 @@ public class SubscriptionApiIT {
         );
     }
 
-    private @NotNull HttpHeaders createAuthHeaders(Long userId) {
+    private @NotNull HttpHeaders createAuthHeaders(String email, Long userId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(createTestToken(userId));
+        headers.setBearerAuth(createTestToken(email, userId));
         return headers;
     }
 
@@ -83,7 +83,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("201 Created and returns saved entity")
         void create_returns201_andBody() {
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com",1L);
 
             ResponseEntity<Subscription> resp =
                     rest.exchange("/api/subscriptions",
@@ -116,7 +116,7 @@ public class SubscriptionApiIT {
                     7, PaymentMethod.CREDIT_CARD
             );
 
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com",1L);
 
             ResponseEntity<String> resp =
                     rest.exchange("/api/subscriptions",
@@ -147,7 +147,7 @@ public class SubscriptionApiIT {
                     PaymentMethod.CREDIT_CARD
             );
 
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com",1L);
 
             var created = rest.exchange("/api/subscriptions",
                     HttpMethod.POST,
@@ -173,8 +173,8 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("403 Forbidden when accessing other user's subscription")
         void get_returns403_wrongUser() {
-            var headersUser = createAuthHeaders(1L);
-            var headers = createAuthHeaders(2L); // Different user
+            var headersUser = createAuthHeaders("test@example.com", 1L);
+            var headers = createAuthHeaders("test2@example.com", 2L); // Different user
             var created = rest.exchange("/api/subscriptions",
                     HttpMethod.POST,
                     new HttpEntity<>(validDto("Netflix", 1L), headersUser),
@@ -189,7 +189,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("404 Not Found when missing")
         void get_missing_returns404() {
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com",1L);
 
             ResponseEntity<String> resp =
                     rest.exchange("/api/subscriptions/{id}",
@@ -208,7 +208,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("200 OK returns list for user")
         void listByUser_returns200_list() {
-            HttpHeaders headers = createAuthHeaders(42L);
+            HttpHeaders headers = createAuthHeaders("test@example.com", 42L);
 
             rest.exchange("/api/subscriptions",
                     HttpMethod.POST,
@@ -240,7 +240,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("200 OK updates entity (path id overrides body id)")
         void update_returns200() {
-            HttpHeaders headers = createAuthHeaders(42L);
+            HttpHeaders headers = createAuthHeaders("test@example.com", 42L);
 
             var created = rest.exchange("/api/subscriptions",
                     HttpMethod.POST,
@@ -277,7 +277,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("404 Not Found when updating missing id")
         void update_missing_returns404() {
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com", 1L);
 
             var body = Subscription.builder()
                     .id(1L)
@@ -308,7 +308,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("204 No Content when deleted")
         void delete_returns204() {
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com", 1L);
 
             var created = rest.exchange("/api/subscriptions",
                     HttpMethod.POST,
@@ -328,7 +328,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("404 Not Found when deleting missing id")
         void delete_missing_returns404() {
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com", 1L);
 
             ResponseEntity<String> resp =
                     rest.exchange("/api/subscriptions/9999",
@@ -346,7 +346,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("200 OK returns list for valid daysAhead")
         void renewals_returns200_list() {
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com", 1L);
             rest.exchange("/api/subscriptions",
                     HttpMethod.POST,
                     new HttpEntity<>(validDto("Netflix", 1L), headers),
@@ -371,7 +371,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("400 Bad Request when daysAhead < 1 (bean validation)")
         void renewals_invalidParam_returns400() {
-            HttpHeaders headers = createAuthHeaders(1L);
+            HttpHeaders headers = createAuthHeaders("test@example.com", 1L);
 
             ResponseEntity<String> resp =
                     rest.exchange("/api/subscriptions/renewals?daysAhead=0",
@@ -390,7 +390,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("Valid token allows access")
         void validToken_allowsAccess() {
-            String shortToken = jwtUtil.generateToken("1");
+            String shortToken = jwtUtil.generateToken("test@example.com",1L);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(shortToken);
@@ -404,7 +404,7 @@ public class SubscriptionApiIT {
         @Test
         @DisplayName("Invalid token signature rejected")
         void invalidSignature_rejected() {
-            String tamperedToken = createTestToken(1L) + "tampered";
+            String tamperedToken = createTestToken("test@example.com", 1L) + "tampered";
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(tamperedToken);
