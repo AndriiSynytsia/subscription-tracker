@@ -57,26 +57,21 @@ class AuthControllerIntegrationTest {
 
     @Test
     void shouldRegisterUserEndToEnd() {
-        //Given
         RegisterRequest request = new RegisterRequest("test@example.com", "P@ssword123", "John", "Doe");
 
-        //When
         ResponseEntity<AuthResponse> response = restTemplate.postForEntity("/api/auth/register", request, AuthResponse.class);
 
-        //Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertNotNull(response.getBody());
         assertThat(response.getBody().token()).isNotNull();
         assertThat(response.getBody().user().email()).isEqualTo("test@example.com");
 
-        //Database check
         Optional<User> savedUser = userRepository.findByEmail("test@example.com");
         assertThat(savedUser).isPresent();
     }
 
     @Test
     void shouldLoginUserEndToEnd() {
-        //Given
         User user = User.builder()
                 .email("login@example.com")
                 .password(passwordEncoder.encode("P@ssword123"))
@@ -88,10 +83,8 @@ class AuthControllerIntegrationTest {
 
         LoginRequest request = new LoginRequest("login@example.com", "P@ssword123");
 
-        //When
         ResponseEntity<AuthResponse> response = restTemplate.postForEntity("/api/auth/login", request, AuthResponse.class);
 
-        //Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertNotNull(response.getBody());
         assertThat(response.getBody().token()).isNotNull();
