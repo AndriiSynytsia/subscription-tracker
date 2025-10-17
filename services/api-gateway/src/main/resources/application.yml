@@ -15,6 +15,7 @@ spring:
         response-timeout: 10s
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - SecurityHeadersFilter
       routes:
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
@@ -22,6 +23,7 @@ spring:
             - Path=/api/auth/**
           filters:
             - StripPrefix=1
+            - SecurityHeadersFilter
 
         - id: subscription-service
           uri: ${SUBSCRIPTION_SERVICE_URL:http://localhost:8086}
@@ -30,6 +32,7 @@ spring:
           filters:
               - StripPrefix=1
               - name: AuthenticationFilter
+                  - SecurityHeadersFilter
 
       globalcors:
         cors-configurations:
