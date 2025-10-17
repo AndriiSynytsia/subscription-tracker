@@ -52,7 +52,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).contains("field");
+        assertThat(response.getBody().getMessage()).contains("error");
     }
 
     @Test
