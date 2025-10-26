@@ -1,5 +1,6 @@
 server:
   port: 8081
+
 spring:
   jpa:
     hibernate:
@@ -9,15 +10,22 @@ spring:
   application:
     name: auth-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/subscription-tracker
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/subscription-tracker
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:password}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 2
       connection-timeout: 20000
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:30}
+
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:https://localhost:3000}
+
+# Service Discovery Configuration
+services:
+  subscription-service:
+    url: ${SUBSCRIPTION_SERVICE_URL:http://subscription-service:8086}
