@@ -3,11 +3,12 @@ package com.keyn_bello.subscription_tracker.service;
 import com.keyn_bello.subscription_tracker.entity.BillingCycle;
 import com.keyn_bello.subscription_tracker.entity.Subscription;
 import com.keyn_bello.subscription_tracker.entity.SubscriptionStatus;
+import com.keyn_bello.subscription_tracker.exceptions.AccessDeniedException;
 import com.keyn_bello.subscription_tracker.exceptions.DuplicateSubscriptionException;
 import com.keyn_bello.subscription_tracker.exceptions.SubscriptionNotFoundException;
 import com.keyn_bello.subscription_tracker.repository.SubscriptionRepository;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
+import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -67,7 +68,15 @@ class SubscriptionServiceTest {
 
     @Test
     void createSubscription_DuplicateSubscription_ThrowsException() {
-        when(repository.save(subscription)).thenThrow(new DataIntegrityViolationException("", new ConstraintViolationException("unique", null)));
+        when(repository.save(subscription)).thenThrow(new DataIntegrityViolationException("", new SQLException("unique constraint violation")));
+
+        assertThatThrownBy(() -> service.createSubscription(subscription))
+                .isInstanceOf(DuplicateSubscriptionException.class);
+    }
+
+    @Test
+    void createSubscription_DuplicateSubscription_MessageBased_ThrowsException() {
+        when(repository.save(subscription)).thenThrow(new DataIntegrityViolationException("", new RuntimeException("unique constraint violated")));
 
         assertThatThrownBy(() -> service.createSubscription(subscription))
                 .isInstanceOf(DuplicateSubscriptionException.class);
@@ -213,7 +222,7 @@ class SubscriptionServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(subscription));
 
         assertThatThrownBy(() -> service.deleteSubscription(1L, 2L))
-                .isInstanceOf(SubscriptionNotFoundException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Access denied: You can only delete your own subscription");
     }
 

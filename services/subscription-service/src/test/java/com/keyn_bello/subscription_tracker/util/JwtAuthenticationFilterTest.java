@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import static org.mockito.Mockito.*;
 
@@ -25,6 +26,9 @@ class JwtAuthenticationFilterTest {
 
     @Mock
     private FilterChain filterChain;
+
+    @Mock
+    private UserDetailsService userDetailsService;
 
     @InjectMocks
     private JwtAuthenticationFilter filter;
