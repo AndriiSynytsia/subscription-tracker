@@ -3,13 +3,13 @@ services:
     image: postgres:16
     container_name: subscription-tracker-db
     environment:
-      POSTGRES_DB: ${POSTGRES_NAME:-subscription-tracker}
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,10 +20,13 @@ services:
     expose:
       - "8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_NAME:-subscription_tracker_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
-    depends_on: [db]
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - db
 
   subscription-service:
     build: ./services/subscription-service
@@ -31,11 +34,15 @@ services:
     expose:
       - "8086"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_NAME:-subscription_tracker_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       AUTH_BASE_URL: http://auth-service:8081
-    depends_on: [db, auth-service]
+    depends_on:
+      - db
+      - auth-service
 
   nginx:
     image: nginx:latest
