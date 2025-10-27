@@ -1,6 +1,7 @@
 package com.keyn_bello.subscription_tracker.service;
 
 import com.keyn_bello.subscription_tracker.entity.Subscription;
+import com.keyn_bello.subscription_tracker.exceptions.AccessDeniedException;
 import com.keyn_bello.subscription_tracker.exceptions.DuplicateSubscriptionException;
 import com.keyn_bello.subscription_tracker.exceptions.SubscriptionNotFoundException;
 import com.keyn_bello.subscription_tracker.repository.SubscriptionRepository;
@@ -134,7 +135,7 @@ public class SubscriptionService {
                 .orElseThrow(() -> new SubscriptionNotFoundException("Subscription with id " + id + " not found"));
 
         if (!subscription.getUserId().equals(userId)) {
-            throw new SubscriptionNotFoundException("Access denied: You can only delete your own subscription");
+            throw new AccessDeniedException("Access denied: You can only delete your own subscription");
         }
         subscriptionRepository.deleteById(id);
     }
