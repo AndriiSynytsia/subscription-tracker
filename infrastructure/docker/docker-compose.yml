@@ -15,7 +15,7 @@ services:
       retries: 5
 
   auth-service:
-    build: ./services/auth-service
+    build: ../../services/auth-service
     container_name: auth-service
     expose:
       - "8081"
@@ -29,7 +29,7 @@ services:
       - db
 
   subscription-service:
-    build: ./services/subscription-service
+    build: ../../services/subscription-service
     container_name: subscription-service
     expose:
       - "8086"
