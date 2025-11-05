@@ -26,7 +26,6 @@
     <modules>
         <module>services/auth-service</module>
         <module>services/subscription-service</module>
-        <module>shared/common-lib</module>
     </modules>
 
     <dependencyManagement>
