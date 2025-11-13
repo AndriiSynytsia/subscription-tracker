@@ -1,0 +1,5 @@
+/apps/web/ @ web-dev
+/apps/mobile/ @ mobile-dev
+/packages/ui/ @ ui-dev
+/services/ @ backend-dev
+/infrastructure/ @ deops

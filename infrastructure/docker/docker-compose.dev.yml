@@ -22,7 +22,7 @@ services:
 
   #Services
   auth-service:
-    build: ./services/auth-service
+    build: ../../services/auth-service
     ports:
       - "8081:8081"
     depends_on: [postgres]
@@ -31,7 +31,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   subscription-service:
-    build: ./services/subscription-service
+    build: ../../services/subscription-service
     ports:
       - "8082:8082"
     depends_on:

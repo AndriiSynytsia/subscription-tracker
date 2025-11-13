@@ -24,3 +24,13 @@ A free, open-source app to track recurring subscriptions and personal expenses.
 1. Copy `.env.example` to `.env`
 2. Update `.env` with your actual credentials
 3. Never commit `.env` to version control
+
+## Workflow
+
+We use a standard SDLC with Milestones → Epics → Issues.  
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
+
+### Branching
+- `main` is the protected production branch
+- Use feature/fix/chore branches as per naming convention
+- Use Conventional Commits for commit messages  
