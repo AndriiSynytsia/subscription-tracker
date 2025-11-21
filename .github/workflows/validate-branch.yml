@@ -8,7 +8,7 @@ jobs:
       - name: Check branch naming convention
         run: |
           BRANCH_NAME=${GITHUB_HEAD_REF}
-          if [[ ! $BRANCH_NAME =~ ^(feature|fix|chore|docs|hotfix)\/[a-z0-9._#-]+-[0-9]+$ ]]; then
+          if [[ ! $BRANCH_NAME =~ ^(feature|fix|chore|docs|hotfix)\/[a-z0-9._-]+-[#]?[0-9]+$ ]]; then
             echo "❌ Branch name '$BRANCH_NAME' is invalid."
             echo "Use pattern: feature/<area>/<short-desc>-#<issue>"
             exit 1
