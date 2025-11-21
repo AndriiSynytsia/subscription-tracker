@@ -1,4 +1,4 @@
-// subscription-tracker/.commitlintrc.js
+// subscription-tracker/.commitlintrc.mjs
 module.exports = {
   extends: ['@commitlint/config-conventional'],
   rules: {
