@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { login } from "@subscription-tracker/api-client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -116,9 +117,9 @@ const LoginPage = () => {
 
             <p className="text-muted-foreground text-center text-sm">
               Don&apos;t have an account?{" "}
-              <a href="/register" className="text-primary font-medium underline-offset-4 hover:underline">
+              <Link href="/register" className="text-primary font-medium underline-offset-4 hover:underline">
                 Register
-              </a>
+              </Link>
             </p>
           </div>
         </div>
