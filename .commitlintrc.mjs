@@ -1,5 +1,5 @@
-// subscription-tracker/.commitlintrc.js
-module.exports = {
+// subscription-tracker/.commitlintrc.mjs
+export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
     'type-enum': [
