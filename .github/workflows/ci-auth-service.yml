@@ -32,7 +32,7 @@ jobs:
 
       - name: Build & Test
         working-directory: services/auth-service
-        run: ./mvnw -B clean verify
+        run: ../mvnw -B clean verify
 
       - name: Upload JUnit reports
         if: always()
