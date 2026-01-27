@@ -5,6 +5,7 @@ on:
     paths:
       - 'services/auth-service/**'
       - 'pom.xml'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
