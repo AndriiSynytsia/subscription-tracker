@@ -5,9 +5,9 @@ Welcome! Here's how to contribute effectively:
 1. Find the [ISSUE](https://github.com/AndriiSynytsia/subscription-tracker/issues) that you would like to work on.
 2. Let [me](https://github.com/AndriiSynytsia) know that you would like to take an issue and I will assign it to you.
 3. Create a branch from the issue tab that you picked:
-   ![How to create branch assigned to issue](images/CreateABranch.png)
+   ![How to create branch assigned to issue](docs/images/CreateABranch.png)
 4. Rename current branch to the proper format as described in the next section
-   ![Rename a branch according to convention](images/RenameABranch.png)
+   ![Rename a branch according to convention](docs/images/RenameABranch.png)
 
 ## 🔀 Branch Naming Convention
 ## IMPORTANT:
