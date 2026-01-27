@@ -28,7 +28,7 @@ A free, open-source app to track recurring subscriptions and personal expenses.
 ## Workflow
 
 We use a standard SDLC with Milestones → Epics → Issues.  
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 
 ### Branching
 - `main` is the protected production branch
