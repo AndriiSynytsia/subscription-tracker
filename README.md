@@ -64,7 +64,7 @@ docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d postgres
 ## Workflow
 
 We use a standard SDLC with Milestones → Epics → Issues.  
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 
 ### Branching
 - `main` is the protected production branch
