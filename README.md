@@ -25,6 +25,22 @@ A free, open-source app to track recurring subscriptions and personal expenses.
 2. Update `.env` with your actual credentials
 3. Never commit `.env` to version control
 
+## Development Setup
+
+### Git Hooks
+To enforce branch naming and code quality standards:
+
+**Windows:**
+```bash
+setup-git-hooks.bat
+```
+
+**MacOS/Linux:**
+```bash
+chmod +x setup-git-hooks.sh
+./setup-git-hooks.sh
+```
+
 ## Workflow
 
 We use a standard SDLC with Milestones → Epics → Issues.  
