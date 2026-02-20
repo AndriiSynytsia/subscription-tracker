@@ -15,6 +15,7 @@ export default {
         'test',
         'chore',
         'ci',
+        'config'
       ],
     ],
     'subject-case': [2, 'never', ['sentence-case', 'start-case', 'pascal-case', 'upper-case']],
