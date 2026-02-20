@@ -61,6 +61,29 @@ docker compose -f infrastructure/docker/docker-compose.dev.yml up -d postgres
 - Notifications: Firebase Cloud Messaging
 - Docs: OpenAPI 3, Swagger UI
 
+---
+## Setup
+
+1. Copy `.env.example` to `.env`
+2. Update `.env` with your actual credentials
+3. Never commit `.env` to version control
+
+## Development Setup
+
+### Git Hooks
+To enforce branch naming and code quality standards:
+
+**Windows:**
+```bash
+setup-git-hooks.bat
+```
+
+**MacOS/Linux:**
+```bash
+chmod +x setup-git-hooks.sh
+./setup-git-hooks.sh
+```
+
 ## Workflow
 
 We use a standard SDLC with Milestones → Epics → Issues.  
