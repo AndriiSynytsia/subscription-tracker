@@ -10,15 +10,15 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 # Setup environment if not exists
-if [ ! -f .env ]; then
+if [ ! -f ./infrastructure/docker/.env ]; then
     echo "Creating .env file from template..."
-    cp .env.example .env
+    cp ./infrastructure/docker/.env.example ./infrastructure/docker/.env
     echo "Please update .env with your actual values if needed"
 fi
 
 # Start services
 echo "Starting backend services..."
-docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d
+docker compose -f infrastructure/docker/docker-compose.dev.yml up -d
 
 # Wait for services to be ready
 echo "Waiting for services to start..."
@@ -43,4 +43,4 @@ echo "Backend is running!"
 echo "API Docs: http://localhost:8081/swagger-ui.html"
 echo "Database: localhost:5433"
 echo ""
-echo "To stop: docker-compose -f infrastructure/docker/docker-compose.dev.yml down"
+echo "To stop: docker compose -f infrastructure/docker/docker-compose.dev.yml down"

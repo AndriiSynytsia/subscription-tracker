@@ -7,14 +7,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not exist .env (
+if not exist ./infrastructure/docker/.env (
     echo Creating .env file from template...
-    copy .env.example .env
+    copy ./infrastructure/docker/.env.example ./infrastructure/docker/.env
     echo Please update .env with your actual values if needed
 )
 
 echo Starting backend services...
-docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d
+docker compose -f infrastructure/docker/docker-compose.dev.yml up -d
 
 echo Waiting for services to start...
 timeout /t 15 /nobreak >nul
@@ -28,4 +28,4 @@ echo Backend is running!
 echo API Docs: http://localhost:8081/swagger-ui.html
 echo Database: localhost:5433
 echo.
-echo To stop: docker-compose -f infrastructure/docker/docker-compose.dev.yml down
+echo To stop: docker compose -f infrastructure/docker/docker-compose.dev.yml down

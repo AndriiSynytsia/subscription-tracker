@@ -16,14 +16,14 @@ A free, open-source app to track recurring subscriptions and personal expenses.
 
 ```bash
 # 1. Clone and navigate
-git clone <your-repo-url>
+git clone https://github.com/AndriiSynytsia/subscription-tracker.git
 cd subscription-tracker
 
 # 2. Setup environment
 cp infrastructure/docker/.env.example infrastructure/docker/.env
 
 # 3. Start backend services
-docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d
+docker compose -f infrastructure/docker/docker-compose.dev.yml up -d
 
 # 4. Verify services are running
 curl http://localhost:8081/actuator/health  # Auth Service
@@ -39,7 +39,7 @@ Services will be available at:
 
 #### Start database only
 ```bash
-docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d postgres
+docker compose -f infrastructure/docker/docker-compose.dev.yml up -d postgres
 ```
 #### Run services locally
 ```bash 
